@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a feature or an improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who is affected (artisan, client, verifier) and what blocks them today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: MVP priority (see docs/project-brief.md)
+      options: [Must have (submission), If time allows (before final pitch), Later (roadmap)]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] ..."
