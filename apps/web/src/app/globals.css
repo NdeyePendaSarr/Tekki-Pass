@@ -1,0 +1,34 @@
+/* Readability rules from the brief: 16px minimum text, WCAG AA contrast. */
+:root {
+  --color-text: #111;
+  --color-background: #fff;
+  --color-brand: #0f5132;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+h1 {
+  color: var(--color-brand);
+}
