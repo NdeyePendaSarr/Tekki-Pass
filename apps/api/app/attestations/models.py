@@ -4,8 +4,8 @@ import hashlib
 import re
 from dataclasses import dataclass
 
-from app.config import Network
 from app.lightning import preimage_matches
+from app.types import Network
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 

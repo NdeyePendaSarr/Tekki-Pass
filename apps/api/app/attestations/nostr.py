@@ -22,7 +22,7 @@ from typing import Final, get_args
 import nostr_sdk
 
 from app.attestations.models import Attestation, AttestationError, VerifiedAttestation
-from app.config import Network
+from app.types import Network
 
 BADGE_IDENTIFIER: Final = "tekki-pass-job"
 BADGE_DEFINITION_KIND: Final = 30009

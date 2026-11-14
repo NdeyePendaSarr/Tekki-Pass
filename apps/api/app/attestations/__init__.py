@@ -9,12 +9,22 @@ from app.attestations.nostr import (
     verify_attestation,
 )
 from app.attestations.privacy import hash_client_phone
+from app.attestations.relays import (
+    EventPublisher,
+    NostrRelayPublisher,
+    PublishError,
+    PublishResult,
+)
 
 __all__ = [
     "BADGE_IDENTIFIER",
     "Attestation",
     "AttestationError",
+    "EventPublisher",
     "IssuerKeys",
+    "NostrRelayPublisher",
+    "PublishError",
+    "PublishResult",
     "VerifiedAttestation",
     "build_badge_definition",
     "hash_client_phone",

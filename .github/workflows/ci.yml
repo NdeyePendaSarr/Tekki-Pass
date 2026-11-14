@@ -18,6 +18,14 @@ jobs:
   api:
     name: API (ruff, mypy, pytest, pip-audit)
     runs-on: ubuntu-latest
+    # Local relay so publication is tested for real, without touching public relays.
+    services:
+      relay:
+        image: scsibug/nostr-rs-relay:0.10.0
+        ports:
+          - 8080:8080
+    env:
+      NOSTR_TEST_RELAY_URL: ws://localhost:8080
     defaults:
       run:
         working-directory: apps/api
