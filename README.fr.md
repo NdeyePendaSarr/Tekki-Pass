@@ -75,16 +75,6 @@ Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestation
 
 Le modèle de menaces complet figure dans le [README anglais](README.md#threat-model-mvp) et dans la [fiche projet](docs/project-brief.md).
 
-## Indicateurs
-
-Les valeurs cibles seront fixées après les entretiens terrain. Aucune n'est inventée ici. Liste complète : [README anglais](README.md#metrics).
-
-## Feuille de route
-
-- **Soumission (20 nov. 2026) :** profil artisan, wallet, clé Nostr et sauvegarde de récupération ; demande d'attestation et lien partageable ; confirmation et paiement côté client ; attestation signée sur Nostr ; page publique de l'artisan avec QR code ; installation en une commande, données de démo.
-- **Avant le pitch final :** note vocale → fiche chantier (IA), interface en wolof, signaux anti-collusion, connexion d'un wallet existant via NWC.
-- **Plus tard :** OpenTimestamps, émetteurs accrédités (Chambre des Métiers), divulgation sélective, score microfinance, API B2B, paiement de l'acompte ou du chantier en Lightning.
-
 ## Contribuer et licence
 
 Voir [CONTRIBUTING.md](CONTRIBUTING.md) et le [Code de conduite](CODE_OF_CONDUCT.md). Publié sous [licence MIT](LICENSE).

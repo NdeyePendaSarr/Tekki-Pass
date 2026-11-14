@@ -90,26 +90,6 @@ Key decisions:
 | Server secret theft         | Environment variables only, never committed; least privilege      |
 | Malicious input             | Strict validation of every input, rate limiting                   |
 
-## Metrics
-
-Targets will be set after field interviews. None are invented here.
-
-| Metric                                        | Source              | Target |
-| --------------------------------------------- | ------------------- | ------ |
-| Weekly active artisans                        | Database            | TODO   |
-| Attestations published per week               | Nostr relays + DB   | TODO   |
-| Share of attestation requests paid            | Wallet + DB         | TODO   |
-| Time from link sent to attestation published  | Anonymized logs     | TODO   |
-| QR code verifications                         | Public page         | TODO   |
-| Share of accounts with a backed-up recovery phrase | App            | TODO   |
-| Attestations flagged as suspicious            | Anti-collusion signals | TODO |
-
-## Roadmap
-
-- **Submission (20 Nov 2026):** artisan profile, wallet, Nostr key and recovery backup; attestation request and shareable link; client confirmation and payment; signed attestation on Nostr; public artisan page with QR code; one-command install, demo data.
-- **Before the final pitch:** voice note → job sheet (AI), Wolof UI, anti-collusion signals, connecting an existing wallet via NWC.
-- **Later:** OpenTimestamps, accredited issuers (Chambre des Métiers), selective disclosure, microfinance score, B2B API, paying the deposit or the whole job over Lightning.
-
 ## Open questions
 
 - TODO: Lightning SDK (decision due 15 Nov 2026)
