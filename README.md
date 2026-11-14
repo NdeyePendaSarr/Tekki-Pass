@@ -73,7 +73,7 @@ Key decisions:
 
 - **Users:** artisans who may not be comfortable with writing, on entry-level Android phones over 3G. The UI uses plain words ("payment", "proof"), 16 px minimum text and WCAG AA contrast.
 - **Sovereignty:** Tekki-Pass never holds the artisan's money or proofs.
-- **Privacy:** no names or phone numbers on Nostr, only a hash of the client's number. No personal data in logs.
+- **Privacy:** no names or phone numbers on Nostr, only a keyed hash (HMAC) of the client's number. No personal data in logs.
 - **Security:** no home-made cryptography, pinned dependencies, secrets only in environment variables. See [SECURITY.md](SECURITY.md).
 - **Network:** testnet by default. Mainnet only for an explicit demo, pending the organizers' answer (ADR 0004).
 - **Time:** submission is due on 20 November 2026, 20:00 UTC.
@@ -86,7 +86,7 @@ Key decisions:
 | Lost or stolen phone        | Recovery phrase backed up at sign-up, local PIN                   |
 | Issuer impersonation        | Issuer public key checked on the verification page                |
 | Attestation replay          | Unique ID bound to the payment hash and the artisan's key         |
-| Personal data leak          | Only a hash of the client's number is published                   |
+| Personal data leak          | Only a keyed hash (HMAC) of the client's number is published      |
 | Server secret theft         | Environment variables only, never committed; least privilege      |
 | Malicious input             | Strict validation of every input, rate limiting                   |
 

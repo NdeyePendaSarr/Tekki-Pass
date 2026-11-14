@@ -68,7 +68,7 @@ Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestation
 
 - **Utilisateurs :** des artisans parfois peu à l'aise avec l'écrit, sur des Android d'entrée de gamme en 3G. L'interface utilise des mots simples (« paiement », « preuve »), un texte de 16 px minimum et un contraste WCAG AA.
 - **Souveraineté :** Tekki-Pass ne détient ni l'argent ni les preuves de l'artisan.
-- **Vie privée :** ni nom ni numéro sur Nostr, seulement un hash du numéro du client. Aucune donnée personnelle dans les logs.
+- **Vie privée :** ni nom ni numéro sur Nostr, seulement un hash protégé par une clé secrète (HMAC) du numéro du client. Aucune donnée personnelle dans les logs.
 - **Sécurité :** pas de cryptographie maison, dépendances épinglées, secrets uniquement en variables d'environnement. Voir [SECURITY.md](SECURITY.md).
 - **Réseau :** testnet par défaut. Mainnet seulement pour une démo explicite, en attendant la réponse des organisateurs (ADR 0004).
 - **Délai :** soumission le 20 novembre 2026, 20h00 UTC.

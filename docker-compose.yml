@@ -23,6 +23,9 @@ services:
     environment:
       NETWORK: ${NETWORK:-testnet}
       DATABASE_URL: postgresql://${POSTGRES_USER:-tekki}:${POSTGRES_PASSWORD:-change-me-local-only}@db:5432/${POSTGRES_DB:-tekki_pass}
+      # Secrets come only from .env; empty means "not provisioned yet".
+      NOSTR_ISSUER_NSEC: ${NOSTR_ISSUER_NSEC:-}
+      CLIENT_PHONE_PEPPER: ${CLIENT_PHONE_PEPPER:-}
     ports:
       - "8000:8000"
     depends_on:
