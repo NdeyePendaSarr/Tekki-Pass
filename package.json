@@ -1,0 +1,13 @@
+{
+  "name": "tekki-pass",
+  "private": true,
+  "description": "Repository tooling for Tekki-Pass (commit message linting).",
+  "license": "MIT",
+  "scripts": {
+    "commitlint": "commitlint"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "20.5.3",
+    "@commitlint/config-conventional": "20.5.3"
+  }
+}

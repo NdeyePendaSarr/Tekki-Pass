@@ -1,0 +1,4 @@
+# Normalize line endings: the team works on Windows, macOS and Linux.
+* text=auto eol=lf
+*.png binary
+*.ico binary
