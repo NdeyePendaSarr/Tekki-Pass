@@ -1,8 +1,14 @@
-/* Readability rules from the brief: 16px minimum text, WCAG AA contrast. */
+/* Readability rules from the brief: 16px minimum text, WCAG AA contrast, large touch targets. */
 :root {
   --color-text: #111;
+  --color-muted: #4a4a4a;
   --color-background: #fff;
+  --color-surface: #f4f6f5;
   --color-brand: #0f5132;
+  --color-brand-text: #fff;
+  --color-error: #a4161a;
+  --color-ok: #0f5132;
+  --color-whatsapp: #128c4a;
 }
 
 *,
@@ -26,9 +32,157 @@ body {
 main {
   max-width: 40rem;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 1rem 3rem;
 }
 
 h1 {
   color: var(--color-brand);
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin-top: 0;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: 1rem;
+}
+
+.big {
+  font-size: 1.25rem;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.card.success {
+  border: 2px solid var(--color-ok);
+}
+
+.center {
+  text-align: center;
+}
+
+.button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-brand);
+  color: var(--color-brand-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.secondary {
+  background: transparent;
+  color: var(--color-brand);
+  border: 2px solid var(--color-brand);
+}
+
+.button.whatsapp {
+  background: var(--color-whatsapp);
+}
+
+.link {
+  display: block;
+  margin: 0.5rem auto;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  color: var(--color-brand);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.field {
+  display: block;
+  margin: 1rem 0;
+  font-weight: 600;
+}
+
+.field input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--color-muted);
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.error {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.ok {
+  color: var(--color-ok);
+  font-weight: 600;
+}
+
+.words {
+  columns: 2;
+  padding-left: 1.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.steps li {
+  margin: 0.5rem 0;
+}
+
+.link-box {
+  padding: 0.5rem;
+  background: var(--color-background);
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.qr {
+  width: min(16rem, 100%);
+  margin: 0 auto;
+}
+
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.attestations {
+  list-style: none;
+  padding: 0;
 }

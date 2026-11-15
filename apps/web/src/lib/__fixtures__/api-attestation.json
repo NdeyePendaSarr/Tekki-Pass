@@ -1,0 +1,25 @@
+{
+  "issuer": "a1e2127737e3ca11c6255b1a67e4e564d544a56931d45e478571279a224e59a0",
+  "artisan": "2dc54babcde7758be898d51fb7277fc4c66fa4d9c32931262a495040df39d991",
+  "event": {
+    "id": "6764e83959520c348d588e4590acc9019b1c10a1ba77733786fad6f4eca1b9ad",
+    "pubkey": "a1e2127737e3ca11c6255b1a67e4e564d544a56931d45e478571279a224e59a0",
+    "created_at": 1794740734,
+    "kind": 8,
+    "tags": [
+      [
+        "a",
+        "30009:a1e2127737e3ca11c6255b1a67e4e564d544a56931d45e478571279a224e59a0:tekki-pass-job"
+      ],
+      ["p", "2dc54babcde7758be898d51fb7277fc4c66fa4d9c32931262a495040df39d991"],
+      ["attestation", "db688236791c2922773981429bd822960d1d3d9b6623794a777ecf28888cc241"],
+      ["payment_hash", "d913228012d4b1a975592f5694f5806a48aa2fd8cceb5f2ab9ef1f2a4407dbcc"],
+      ["preimage", "5df9e347b19f0b47597bb5e20996d6ccb33bc8dc8633ca17281c954c31433ae0"],
+      ["client", "0d995315edd55ae01e106e47971035067de7505cc4ef2e5af88547998637d454"],
+      ["network", "testnet"],
+      ["t", "tekki-pass"]
+    ],
+    "content": "Carrelage cuisine, 9 m²",
+    "sig": "79399d8b0282e976ec3e089b32595fef8e7c6e80c3a0f7a810cf0ab90a77c3fdcc991e2eef57fc8b0c29abb987aca9c6c7c27d3d174a4608062cd6d95464f12e"
+  }
+}
