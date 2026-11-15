@@ -53,13 +53,21 @@ def validate_relay_url(url: str) -> str:
         ValueError: for any other URL.
     """
     parts = urlsplit(url)
-    host = parts.hostname or ""
-    is_local = host in _LOCAL_HOSTS or (host != "" and "." not in host)
-    if parts.scheme == "wss" and host:
+    if parts.scheme == "wss" and parts.hostname:
         return url
-    if parts.scheme == "ws" and is_local:
+    if parts.scheme == "ws" and _is_local_host(parts.hostname or ""):
         return url
     raise ValueError(f"relay URL must use wss:// (ws:// only for local relays): {url!r}")
+
+
+def _is_local_host(host: str) -> bool:
+    """localhost, loopback, or a Docker service name (no dots)."""
+    return host in _LOCAL_HOSTS or (host != "" and "." not in host)
+
+
+def is_local_relay(url: str) -> bool:
+    """True for a relay on this machine or the Docker network (never public)."""
+    return _is_local_host(urlsplit(url).hostname or "")
 
 
 class NostrRelayPublisher:

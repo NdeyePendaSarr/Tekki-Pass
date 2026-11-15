@@ -19,7 +19,7 @@ from app.attestations import (
     PublishError,
     build_badge_definition,
 )
-from app.attestations.relays import validate_relay_url
+from app.attestations.relays import is_local_relay, validate_relay_url
 from app.config import Settings
 from tests.fakes.fake_publisher import FakePublisher
 
@@ -49,11 +49,12 @@ def test_publisher_validates_its_configuration() -> None:
         NostrRelayPublisher(["wss://nos.lol"], min_acks=2)
 
 
-def test_default_settings_use_several_public_relays() -> None:
+def test_default_settings_only_publish_locally() -> None:
+    # Safe default: a developer can never push fake attestations to public relays.
     settings = Settings()
 
-    assert len(settings.nostr_relays) >= settings.nostr_min_relay_acks >= 2
-    assert all(url.startswith("wss://") for url in settings.nostr_relays)
+    assert all(is_local_relay(url) for url in settings.nostr_relays)
+    assert not is_local_relay("wss://nos.lol")
 
 
 def test_settings_reject_inconsistent_relay_config() -> None:

@@ -1,6 +1,7 @@
 # Local stack: `docker compose up --build`
 #   web -> http://localhost:3000
-#   api -> http://localhost:8000/health
+#   api -> http://localhost:8000/health (API docs: /docs)
+#   relay -> ws://localhost:7777 (local Nostr relay)
 # Values come from `.env` (copy `.env.example`); the defaults below are for local development only.
 
 services:
@@ -23,21 +24,34 @@ services:
     environment:
       NETWORK: ${NETWORK:-testnet}
       DATABASE_URL: postgresql://${POSTGRES_USER:-tekki}:${POSTGRES_PASSWORD:-change-me-local-only}@db:5432/${POSTGRES_DB:-tekki_pass}
-      # Secrets come only from .env; empty means "not provisioned yet".
+      # Local demo: fake Lightning payments, attestations published to the local relay only.
+      LIGHTNING_BACKEND: fake
+      NOSTR_RELAYS: '["ws://relay:8080"]'
+      NOSTR_MIN_RELAY_ACKS: 1
+      # Secrets come only from .env. When unset, throwaway values are generated at startup.
+      DEV_GENERATE_MISSING_SECRETS: "true"
       NOSTR_ISSUER_NSEC: ${NOSTR_ISSUER_NSEC:-}
       CLIENT_PHONE_PEPPER: ${CLIENT_PHONE_PEPPER:-}
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+      relay:
+        condition: service_started
+
+  # Local Nostr relay (never a public one in development). ws://localhost:7777 from the host.
+  relay:
+    image: scsibug/nostr-rs-relay:0.10.0
+    ports:
+      - "${RELAY_PORT:-7777}:8080"
 
   web:
     build: ./apps/web
     environment:
       API_URL: http://api:8000
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
     depends_on:
       api:
         condition: service_healthy
