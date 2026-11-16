@@ -42,6 +42,8 @@ def make_settings(issuer: IssuerKeys | None, **overrides: object) -> Settings:
         "max_attestations_per_client": 2,
         # These tests cover the flow itself; NIP-98 has its own tests in test_nip98.py.
         "nip98_required": False,
+        # Badge definition publication at startup has its own tests (test_badge_definition.py).
+        "publish_badge_definition_on_startup": False,
     }
     values.update(overrides)
     return Settings(**values)  # type: ignore[arg-type]
