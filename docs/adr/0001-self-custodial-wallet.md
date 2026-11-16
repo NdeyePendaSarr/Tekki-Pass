@@ -1,6 +1,6 @@
 # 0001. Self-custodial Lightning wallet
 
-- **Status:** Accepted. SDK choice pending (due 15 Nov 2026)
+- **Status:** Accepted. SDK chosen in [ADR 0005](0005-lightning-sdk-breez-spark.md) (Breez SDK - Spark)
 - **Date:** 2026-11-14
 
 ## Context

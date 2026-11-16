@@ -1,7 +1,8 @@
 # 0005. Lightning SDK: Breez SDK - Spark
 
-- **Status:** Proposed (team decision due 15 Nov 2026). Completes ADR 0001
-- **Date:** 2026-11-14
+- **Status:** Accepted on 2026-11-16 by the team. Completes ADR 0001
+- **Date:** proposed 2026-11-14, accepted 2026-11-16
+- **Deciders:** Bachir Deme (product owner), Ndeye Penda Sarr (backend), Ibrahima Niasse Diouf (front end), Bayero (Lightning and DevOps)
 
 ## Context
 
@@ -47,6 +48,7 @@ Use **Breez SDK - Spark** (`@breeztech/breez-sdk-spark`, MIT, version 0.28.x) in
   - Spark's regtest network (hosted by Lightspark, free, no key needed) **has no Lightning**. Breez recommends testing Lightning on **mainnet with small amounts**.
   - Plan: CI and unit tests use the fakes; the Spark wallet is developed and tested on regtest; the end-to-end Lightning flow is tested and demoed on mainnet with a few sats.
   - This qualifies ADR 0004: for Lightning, "testnet" in practice means Spark regtest without Lightning. A follow-up ADR will update 0004 once the organizers answer.
+  - **Open question (16 Nov 2026):** the organizers have not yet said whether mainnet is required. Until they do, the plan above stands: local and CI on fakes, regtest for the wallet, mainnet with a few sats only for the end-to-end test and the jury demo. If their answer changes this, ADR 0006 will record it.
 - **Trust assumptions to state in the pitch.** Spark relies on a set of operators (1-of-n honesty assumption) and on a Lightning service provider for swaps. Funds remain recoverable on Bitcoin L1 without them.
 - **Vendor lock-in is limited.** On the API side, everything goes through `LightningWallet` and standard protocols (LNURL-pay, LUD-21). Any wallet with a Lightning address that supports LUD-21 would work, NWC wallets included.
 - **Plan B (risk in the brief):** if the integration fails by 18 Nov, the demo uses the same flow with an NWC-connected wallet, or the demo video allowed by the rules.
@@ -70,6 +72,8 @@ What the documentation and the types confirm:
 3. **LUD-21 is supported.** Payments received through a Lightning address can be verified by a third party at a public `verify` URL. This is what lets the API check payment without the artisan's phone.
 
 ## Still to check (needs the API key and a few mainnet sats)
+
+These checks are part of the Lightning and DevOps tasks (wallet in the PWA, Lightning address, LNURL adapter, mainnet end-to-end test). Their results will be added below.
 
 1. That the Breez `verify` URL really returns the `preimage`, and not just `settled`. If it doesn't, fallback: the artisan's app sends the preimage to the API when it opens.
 2. That Lightning address registration works with our API key, and what the address domain is.
