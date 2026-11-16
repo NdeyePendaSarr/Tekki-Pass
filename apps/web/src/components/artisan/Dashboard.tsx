@@ -20,7 +20,7 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
     setBusy(true);
     setError(null);
     try {
-      setCreated(await api.createRequest(identity.pubkey, title.trim()));
+      setCreated(await api.createRequest(identity.pubkey, title.trim(), identity.secretKey));
       setTitle("");
     } catch (e) {
       setError(errorMessage(e));

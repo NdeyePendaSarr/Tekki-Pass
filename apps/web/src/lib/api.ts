@@ -1,4 +1,5 @@
 /** Typed client for the Tekki-Pass API (through the same-origin /api proxy). */
+import { nip98Header } from "./nip98";
 
 export type RequestStatus =
   "awaiting_client" | "awaiting_payment" | "paid" | "published" | "expired";
@@ -40,13 +41,32 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(path: string, init?: { method?: "POST"; body?: unknown }): Promise<T> {
+interface CallOptions {
+  method?: "POST";
+  body?: unknown;
+  /** Artisan secret key: when given, the request is signed with NIP-98. */
+  signWith?: Uint8Array;
+}
+
+async function call<T>(path: string, init?: CallOptions): Promise<T> {
+  const method = init?.method ?? "GET";
+  // Serialize once: the NIP-98 signature covers these exact bytes.
+  const body = init?.body === undefined ? undefined : JSON.stringify(init.body);
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (init?.signWith) {
+    headers.authorization = nip98Header(
+      init.signWith,
+      `${window.location.origin}/api${path}`,
+      method,
+      body,
+    );
+  }
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
-      method: init?.method ?? "GET",
-      headers: { "content-type": "application/json" },
-      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+      method,
+      headers,
+      body,
       cache: "no-store",
     });
   } catch {
@@ -66,10 +86,12 @@ async function call<T>(path: string, init?: { method?: "POST"; body?: unknown })
 }
 
 export const api = {
-  createRequest: (artisanPubkey: string, title: string) =>
+  /** Signed with the artisan key (NIP-98): the API refuses unsigned or foreign requests. */
+  createRequest: (artisanPubkey: string, title: string, secretKey: Uint8Array) =>
     call<AttestationRequest>("/attestation-requests", {
       method: "POST",
       body: { artisan_pubkey: artisanPubkey, title },
+      signWith: secretKey,
     }),
   getRequest: (token: string) =>
     call<AttestationRequest>(`/attestation-requests/${encodeURIComponent(token)}`),

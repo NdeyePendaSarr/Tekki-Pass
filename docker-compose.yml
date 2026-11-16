@@ -30,8 +30,9 @@ services:
       NOSTR_MIN_RELAY_ACKS: 1
       # Secrets come only from .env. When unset, throwaway values are generated at startup.
       DEV_GENERATE_MISSING_SECRETS: "true"
-      # Artisan auth (NIP-98) stays optional until the web app signs its requests (task F1).
-      NIP98_REQUIRED: "false"
+      # Artisan auth (NIP-98) is required (default). The browser signs the URL it calls:
+      # the web proxy on the published web port, or the API directly.
+      NIP98_URL_PREFIXES: '["http://localhost:${WEB_PORT:-3000}/api","http://localhost:${API_PORT:-8000}"]'
       NOSTR_ISSUER_NSEC: ${NOSTR_ISSUER_NSEC:-}
       CLIENT_PHONE_PEPPER: ${CLIENT_PHONE_PEPPER:-}
     ports:

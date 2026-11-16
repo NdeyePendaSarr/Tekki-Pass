@@ -21,7 +21,7 @@ Persona de démo (fictif) : **Moussa**, carreleur à Dakar.
 | # | Étape | Où (démo locale) | État |
 | --- | --- | --- | --- |
 | 1 | Moussa crée son profil : 12 mots de récupération, vérification de 3 mots, code à 6 chiffres. Sa clé Nostr est dérivée de ces mots (NIP-06). | `/artisan` | ✅ |
-| 2 | Il décrit un chantier terminé et envoie le lien à son client par WhatsApp. La demande est signée avec sa clé (NIP-98). | `/artisan` | ✅ (signature depuis l'appli web : en cours) |
+| 2 | Il décrit un chantier terminé et envoie le lien à son client par WhatsApp. La demande est signée avec sa clé (NIP-98). | `/artisan` | ✅ |
 | 3 | Le client ouvre le lien, confirme le chantier avec son numéro et voit le QR code de paiement. | `/a/<token>` | ✅ |
 | 4 | Le client paie le micro-frais en Lightning. Les sats arrivent dans le wallet de Moussa. | Wallet Lightning | 🟡 paiement simulé (« Simuler le paiement ») ; wallet Breez en cours |
 | 5 | Tekki-Pass vérifie la preuve de paiement, signe l'attestation (badge NIP-58) et la publie sur les relais Nostr. | API | ✅ |
