@@ -54,6 +54,17 @@ class Settings(BaseSettings):
         default=["http://localhost:8000", "http://localhost:3000/api"], min_length=1
     )
 
+    #: Rate limits per client IP, per minute (threat model: request flooding).
+    rate_limit_enabled: bool = True
+    rate_limit_create_per_minute: int = Field(default=10, ge=1)
+    rate_limit_confirm_per_minute: int = Field(default=10, ge=1)
+    #: The client page checks the payment every 3 s (20/min): leave headroom for two tabs.
+    rate_limit_refresh_per_minute: int = Field(default=40, ge=1)
+
+    #: Networks of reverse proxies whose X-Forwarded-For header is trusted (env: JSON array,
+    #: e.g. ["10.0.0.0/8"]). Empty by default: the header is ignored and the peer IP is used.
+    trusted_proxies: list[str] = Field(default_factory=list)
+
     #: Micro-fee paid by the client per attestation (docs/adr/0003).
     #: TODO: set the real amount after the field interviews.
     attestation_fee_sat: int = Field(default=210, ge=1)

@@ -32,4 +32,8 @@ The badge definition (NIP-58 kind 30009) that every attestation points to is pub
 to the relays when the API starts (`app/attestations/definition.py`); a relay outage is
 logged and never blocks startup. Manual run: `uv run python -m app.attestations.definition`.
 
-Not done yet: rate limiting and the real Lightning backend (docs/adr/0005).
+Creation, confirmation and payment checks are rate-limited per client IP (`app/ratelimit.py`):
+`429` with code `rate_limited` and a `Retry-After` header. Behind a proxy, set `TRUSTED_PROXIES`
+so the real client IP is read from `X-Forwarded-For`.
+
+Not done yet: the real Lightning backend (docs/adr/0005).

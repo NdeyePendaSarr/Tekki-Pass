@@ -13,6 +13,7 @@ const MESSAGES: Record<string, string> = {
     "Ce numéro a déjà confirmé beaucoup de chantiers ce mois-ci. Réessaie plus tard.",
   invalid_phone: "Numéro invalide. Écris-le comme 77 123 45 67.",
   invalid_input: "Une information est incorrecte. Vérifie ce que tu as écrit.",
+  rate_limited: "Trop de tentatives en peu de temps. Patiente une minute puis réessaie.",
   publication_failed:
     "Paiement reçu. La preuve n'est pas encore publiée : réessaie dans un instant.",
   not_configured: "Le service n'est pas encore prêt. Préviens l'équipe Tekki-Pass.",
