@@ -104,7 +104,7 @@ Key decisions:
 | Personal data leak | Only a keyed hash (HMAC) of the client's number is published | ✅ |
 | Server secret theft | Environment variables only, never committed; secret scan in CI | ✅ |
 | Malicious input | Strict validation of every input | ✅ |
-| Request flooding | Rate limiting | 🟡 in progress |
+| Request flooding | Rate limiting per client IP (429 + Retry-After) | ✅ |
 
 ## Metrics
 

@@ -15,6 +15,7 @@ from app.auth import Nip98Verifier
 from app.config import Network, Settings, get_settings
 from app.db import create_engine, create_schema, create_session_factory, is_sqlite
 from app.lightning.fake import FakeWalletResolver
+from app.ratelimit import ClientIdentifier, RateLimiter
 from app.requests.routes import dev_router, router
 from app.requests.service import WalletResolver
 
@@ -100,6 +101,8 @@ def create_app(
         else NostrRelayPublisher(resolved.nostr_relays, min_acks=resolved.nostr_min_relay_acks)
     )
     app.state.nip98 = Nip98Verifier(resolved.nip98_url_prefixes)
+    app.state.rate_limiter = RateLimiter()
+    app.state.client_identifier = ClientIdentifier(resolved.trusted_proxies)
     nsec = resolved.nostr_issuer_nsec
     app.state.issuer_pubkey = IssuerKeys(nsec.get_secret_value()).public_key if nsec else None
 

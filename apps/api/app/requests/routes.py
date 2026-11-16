@@ -4,7 +4,7 @@ Errors return `{"detail": {"code": ..., "message": ...}}` so the front end can
 show a plain-language message per `code` (see the UX principles in the brief).
 """
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -14,8 +14,10 @@ from pydantic import BaseModel, Field
 from app.attestations import AttestationError
 from app.attestations.models import MAX_TITLE_LENGTH
 from app.auth import Nip98Error, Nip98Verifier
+from app.config import Settings
 from app.db import session_scope
 from app.lightning.fake import FakeWalletResolver
+from app.ratelimit import retry_after_header
 from app.requests.models import AttestationRequest, RequestStatus
 from app.requests.service import (
     AttestationService,
@@ -60,6 +62,31 @@ async def get_service(request: Request) -> AsyncIterator[AttestationService]:
 
 
 Service = Annotated[AttestationService, Depends(get_service)]
+
+RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+def rate_limit(bucket: str, limit_of: Callable[[Settings], int]) -> Callable[[Request], None]:
+    """Dependency limiting one kind of request per client IP (see app/ratelimit.py)."""
+
+    def dependency(request: Request) -> None:
+        state = request.app.state
+        settings: Settings = state.settings
+        if not settings.rate_limit_enabled:
+            return
+        client = state.client_identifier.identify(
+            request.client.host if request.client else None,
+            request.headers.get("x-forwarded-for"),
+        )
+        wait = state.rate_limiter.hit(bucket, client, limit_of(settings), RATE_LIMIT_WINDOW_SECONDS)
+        if wait is not None:
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={"code": "rate_limited", "message": "too many requests, retry later"},
+                headers={"Retry-After": retry_after_header(wait)},
+            )
+
+    return dependency
 
 
 # --- Schemas -----------------------------------------------------------------------
@@ -128,7 +155,11 @@ class SimulatedPayment(BaseModel):
 # --- Routes ------------------------------------------------------------------------
 
 
-@router.post("/attestation-requests", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/attestation-requests",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("create", lambda s: s.rate_limit_create_per_minute))],
+)
 async def create_request(body: CreateRequestIn, request: Request, service: Service) -> RequestOut:
     """Artisan: describe a job and get the token for the link sent to the client.
 
@@ -168,7 +199,10 @@ async def get_request(token: str, service: Service) -> RequestOut:
         raise _http_error(exc) from exc
 
 
-@router.post("/attestation-requests/{token}/confirm")
+@router.post(
+    "/attestation-requests/{token}/confirm",
+    dependencies=[Depends(rate_limit("confirm", lambda s: s.rate_limit_confirm_per_minute))],
+)
 async def confirm_request(token: str, body: ConfirmIn, service: Service) -> RequestOut:
     """Client: confirm the job and receive the invoice to pay."""
     try:
@@ -182,7 +216,10 @@ async def confirm_request(token: str, body: ConfirmIn, service: Service) -> Requ
         raise _http_error(exc) from exc
 
 
-@router.post("/attestation-requests/{token}/refresh")
+@router.post(
+    "/attestation-requests/{token}/refresh",
+    dependencies=[Depends(rate_limit("refresh", lambda s: s.rate_limit_refresh_per_minute))],
+)
 async def refresh_request(token: str, service: Service) -> RequestOut:
     """Check the payment; once paid, sign and publish the attestation. Safe to repeat."""
     try:
