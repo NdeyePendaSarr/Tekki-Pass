@@ -11,6 +11,11 @@ export interface Identity {
   pubkey: string;
   /** Same key in the human-readable npub form. */
   npub: string;
+  /**
+   * Nostr secret key, used only to sign requests (NIP-98). Kept in memory while the
+   * profile is unlocked; never stored in clear, never sent anywhere.
+   */
+  secretKey: Uint8Array;
 }
 
 export function newRecoveryPhrase(): string {
@@ -26,8 +31,9 @@ export function normalizePhrase(phrase: string): string {
 }
 
 export function identityFromPhrase(phrase: string): Identity {
-  const pubkey = getPublicKey(privateKeyFromSeedWords(normalizePhrase(phrase)));
-  return { pubkey, npub: nip19.npubEncode(pubkey) };
+  const secretKey = privateKeyFromSeedWords(normalizePhrase(phrase));
+  const pubkey = getPublicKey(secretKey);
+  return { pubkey, npub: nip19.npubEncode(pubkey), secretKey };
 }
 
 /** Pick `count` distinct word positions (0-based) for the backup check, in ascending order. */

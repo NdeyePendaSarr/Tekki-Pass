@@ -21,7 +21,7 @@ Demo persona (fictional): **Moussa**, a tiler in Dakar.
 | # | Step | Where (local demo) | Status |
 | --- | --- | --- | --- |
 | 1 | Moussa creates his profile: 12-word recovery phrase, check of 3 words, 6-digit PIN. His Nostr key is derived from the phrase (NIP-06). | `/artisan` | ✅ |
-| 2 | He describes a finished job and sends the link to his client over WhatsApp. The request is signed with his key (NIP-98). | `/artisan` | ✅ (signing from the web app: in progress) |
+| 2 | He describes a finished job and sends the link to his client over WhatsApp. The request is signed with his key (NIP-98). | `/artisan` | ✅ |
 | 3 | The client opens the link, confirms the job with their phone number and sees the payment QR code. | `/a/<token>` | ✅ |
 | 4 | The client pays the micro-fee over Lightning. The sats go to Moussa's wallet. | Lightning wallet | 🟡 simulated payment ("Simuler le paiement"); Breez wallet in progress |
 | 5 | Tekki-Pass checks the proof of payment, signs the attestation (NIP-58 badge) and publishes it on Nostr relays. | API | ✅ |
@@ -97,7 +97,7 @@ Key decisions:
 | Threat | MVP mitigation | Status |
 | --- | --- | --- |
 | Fake attestations (collusion) | Mandatory micro-fee, cap of 5 attestations per client over 30 days | ✅ |
-| Requests created in an artisan's name | Requests signed with the artisan's Nostr key (NIP-98), anti-replay | ✅ API, web signing in progress |
+| Requests created in an artisan's name | Requests signed with the artisan's Nostr key (NIP-98), anti-replay | ✅ |
 | Lost or stolen phone | Recovery phrase backed up and checked at sign-up, local PIN (encrypted storage) | ✅ |
 | Issuer impersonation | Issuer public key checked on the verification page | ✅ |
 | Attestation replay | Unique ID bound to the payment hash and the artisan's key | ✅ |

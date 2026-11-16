@@ -13,6 +13,11 @@ const MESSAGES: Record<string, string> = {
     "Ce numéro a déjà confirmé beaucoup de chantiers ce mois-ci. Réessaie plus tard.",
   invalid_phone: "Numéro invalide. Écris-le comme 77 123 45 67.",
   invalid_input: "Une information est incorrecte. Vérifie ce que tu as écrit.",
+  auth_required: "Ton profil doit être ouvert pour faire cette action. Ouvre-le puis réessaie.",
+  // Most often a phone clock that is off: the signature is only valid for one minute.
+  invalid_auth: "Signature refusée. Vérifie la date et l'heure de ton téléphone, puis réessaie.",
+  auth_pubkey_mismatch:
+    "Ce chantier ne correspond pas à ton profil. Ouvre ton profil puis réessaie.",
   rate_limited: "Trop de tentatives en peu de temps. Patiente une minute puis réessaie.",
   publication_failed:
     "Paiement reçu. La preuve n'est pas encore publiée : réessaie dans un instant.",
