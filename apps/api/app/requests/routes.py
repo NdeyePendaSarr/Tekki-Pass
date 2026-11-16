@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from app.attestations import AttestationError
 from app.attestations.models import MAX_TITLE_LENGTH
+from app.auth import Nip98Error, Nip98Verifier
 from app.db import session_scope
 from app.lightning.fake import FakeWalletResolver
 from app.requests.models import AttestationRequest, RequestStatus
@@ -128,10 +129,34 @@ class SimulatedPayment(BaseModel):
 
 
 @router.post("/attestation-requests", status_code=status.HTTP_201_CREATED)
-async def create_request(body: CreateRequestIn, service: Service) -> RequestOut:
-    """Artisan: describe a job and get the token for the link sent to the client."""
+async def create_request(body: CreateRequestIn, request: Request, service: Service) -> RequestOut:
+    """Artisan: describe a job and get the token for the link sent to the client.
+
+    The artisan proves ownership of `artisan_pubkey` with a NIP-98 signed header, so
+    nobody can create requests in someone else's name.
+    """
+    await _authenticate_artisan(request, body.artisan_pubkey)
     created = await service.create(body.artisan_pubkey, body.title.strip(), body.lightning_address)
     return RequestOut.of(created)
+
+
+async def _authenticate_artisan(request: Request, artisan_pubkey: str) -> None:
+    """Enforce NIP-98 when required. When optional, a header that is present must still be valid."""
+    settings = request.app.state.settings
+    header = request.headers.get("authorization")
+    if not settings.nip98_required and header is None:
+        return
+    verifier: Nip98Verifier = request.app.state.nip98
+    try:
+        # FastAPI already read the body for validation; request.body() returns the cached bytes.
+        signer = verifier.verify(header, request.method, request.url.path, await request.body())
+    except Nip98Error as exc:
+        raise HTTPException(exc.status, detail={"code": exc.code, "message": str(exc)}) from exc
+    if signer != artisan_pubkey:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail={"code": "auth_pubkey_mismatch", "message": "signed by another key"},
+        )
 
 
 @router.get("/attestation-requests/{token}")

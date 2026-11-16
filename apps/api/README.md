@@ -25,5 +25,7 @@ Errors return `{"detail": {"code": "...", "message": "..."}}`. The front end map
 `code` (`not_found`, `invalid_state`, `client_cap_reached`, `invalid_phone`,
 `publication_failed`, `not_configured`) to a plain-language message.
 
-Not done yet: authentication of the artisan on step 1 (planned: NIP-98 signed requests),
-rate limiting, and the real Lightning backend (docs/adr/0005).
+Step 1 requires a NIP-98 `Authorization: Nostr <event>` header signed by the artisan key
+(`app/auth/nip98.py`); errors: `auth_required`, `invalid_auth`, `auth_pubkey_mismatch`.
+
+Not done yet: rate limiting and the real Lightning backend (docs/adr/0005).

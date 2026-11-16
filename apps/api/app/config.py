@@ -43,6 +43,17 @@ class Settings(BaseSettings):
     #: so `docker compose up` works with no setup. Refused with a real Lightning backend.
     dev_generate_missing_secrets: bool = False
 
+    #: Require a NIP-98 signature from the artisan to create a request (secure default).
+    #: docker-compose turns it off until the web app signs its requests (task F1).
+    nip98_required: bool = True
+
+    #: Public base URLs a NIP-98 event may be signed against (env: JSON array). The API
+    #: compares the signed "u" tag with prefix + request path. Include the web proxy
+    #: (".../api") and the API's own public address.
+    nip98_url_prefixes: list[str] = Field(
+        default=["http://localhost:8000", "http://localhost:3000/api"], min_length=1
+    )
+
     #: Micro-fee paid by the client per attestation (docs/adr/0003).
     #: TODO: set the real amount after the field interviews.
     attestation_fee_sat: int = Field(default=210, ge=1)

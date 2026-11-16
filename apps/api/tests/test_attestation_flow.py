@@ -40,6 +40,8 @@ def make_settings(issuer: IssuerKeys | None, **overrides: object) -> Settings:
         "client_phone_pepper": SecretStr("test-pepper"),
         "nostr_issuer_nsec": SecretStr(issuer._keys.secret_key().to_hex()) if issuer else None,
         "max_attestations_per_client": 2,
+        # These tests cover the flow itself; NIP-98 has its own tests in test_nip98.py.
+        "nip98_required": False,
     }
     values.update(overrides)
     return Settings(**values)  # type: ignore[arg-type]
