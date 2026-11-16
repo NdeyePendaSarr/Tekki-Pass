@@ -28,4 +28,8 @@ Errors return `{"detail": {"code": "...", "message": "..."}}`. The front end map
 Step 1 requires a NIP-98 `Authorization: Nostr <event>` header signed by the artisan key
 (`app/auth/nip98.py`); errors: `auth_required`, `invalid_auth`, `auth_pubkey_mismatch`.
 
+The badge definition (NIP-58 kind 30009) that every attestation points to is published
+to the relays when the API starts (`app/attestations/definition.py`); a relay outage is
+logged and never blocks startup. Manual run: `uv run python -m app.attestations.definition`.
+
 Not done yet: rate limiting and the real Lightning backend (docs/adr/0005).

@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     #: Optional at startup so that /health works before the key is provisioned.
     nostr_issuer_nsec: SecretStr | None = None
 
+    #: Publish the badge definition (NIP-58 kind 30009) to the relays when the API starts,
+    #: in the background: a relay outage is logged and never blocks startup.
+    publish_badge_definition_on_startup: bool = True
+
+    #: Optional public image (https) that Nostr clients show for the badge.
+    badge_image_url: str | None = Field(default=None, pattern=r"^https://\S+$")
+
     #: Secret mixed into the client phone hash. Without it, a plain hash of a 9-digit
     #: Senegalese number could be reversed by trying every number.
     client_phone_pepper: SecretStr | None = None

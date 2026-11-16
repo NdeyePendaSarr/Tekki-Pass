@@ -1,5 +1,7 @@
 """FastAPI application entry point."""
 
+import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Literal
@@ -7,7 +9,8 @@ from typing import Literal
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.attestations import EventPublisher, IssuerKeys, NostrRelayPublisher
+from app.attestations import EventPublisher, IssuerKeys, NostrRelayPublisher, PublishResult
+from app.attestations.definition import publish_badge_definition_safely
 from app.auth import Nip98Verifier
 from app.config import Network, Settings, get_settings
 from app.db import create_engine, create_schema, create_session_factory, is_sqlite
@@ -29,6 +32,36 @@ def _wallets_for(settings: Settings) -> WalletResolver:
     raise NotImplementedError(settings.lightning_backend)  # pragma: no cover
 
 
+def _configure_logging() -> None:
+    """Minimal logging so the API's own INFO messages are visible (uvicorn only configures its
+    own loggers). Structured, PII-free logging is a separate task (B5)."""
+    app_logger = logging.getLogger("app")
+    if not app_logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(levelname)s:     %(name)s - %(message)s"))
+        app_logger.addHandler(handler)
+        app_logger.setLevel(logging.INFO)
+
+
+#: Upper bound on how long shutdown waits for the badge definition publication.
+BADGE_SHUTDOWN_GRACE_SECONDS = 15
+
+
+def _start_badge_definition(app: FastAPI) -> "asyncio.Task[PublishResult | None] | None":
+    """Publish the badge definition in the background, if enabled and an issuer key exists."""
+    settings: Settings = app.state.settings
+    nsec = settings.nostr_issuer_nsec
+    if not settings.publish_badge_definition_on_startup or nsec is None:
+        return None
+    task = asyncio.create_task(
+        publish_badge_definition_safely(
+            IssuerKeys(nsec.get_secret_value()), app.state.publisher, settings.badge_image_url
+        )
+    )
+    app.state.badge_definition_task = task
+    return task
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -40,6 +73,7 @@ def create_app(
     A factory keeps tests isolated: each test passes its own settings and fakes
     instead of mutating the process environment.
     """
+    _configure_logging()
     resolved = (settings if settings is not None else get_settings()).with_dev_secrets()
 
     @asynccontextmanager
@@ -48,7 +82,13 @@ def create_app(
         if is_sqlite(resolved.database_url):
             await create_schema(engine)  # PostgreSQL schema comes from Alembic migrations
         app.state.session_factory = create_session_factory(engine)
+        badge_task = _start_badge_definition(app)
         yield
+        if badge_task is not None:
+            # Let a slow publication finish (bounded), so shutdown never hangs on relays.
+            done, _ = await asyncio.wait({badge_task}, timeout=BADGE_SHUTDOWN_GRACE_SECONDS)
+            if not done:
+                badge_task.cancel()
         await engine.dispose()
 
     app = FastAPI(title="Tekki-Pass API", version="0.1.0", lifespan=lifespan)

@@ -71,14 +71,21 @@ def _badge_address(issuer_pubkey: str) -> str:
     return f"{BADGE_DEFINITION_KIND}:{issuer_pubkey}:{BADGE_IDENTIFIER}"
 
 
-def build_badge_definition(issuer: IssuerKeys) -> str:
-    """Signed badge definition event (JSON), published once per issuer key."""
+def build_badge_definition(issuer: IssuerKeys, image_url: str | None = None) -> str:
+    """Signed badge definition event (JSON).
+
+    Kind 30009 is addressable: relays keep only the latest version per issuer and
+    `d` tag, so republishing it (e.g. at every API start) is harmless.
+    """
     tags = [
         ["d", BADGE_IDENTIFIER],
         ["name", "Chantier attesté Tekki-Pass"],
         ["description", "Chantier confirmé par le client et payé en Lightning."],
         ["t", HASHTAG],
     ]
+    if image_url:
+        # NIP-58: optional image shown by Nostr clients next to the badge.
+        tags.append(["image", image_url])
     return issuer.sign(BADGE_DEFINITION_KIND, "", tags)
 
 
