@@ -62,7 +62,7 @@ flowchart LR
 | `docs/adr` | Décisions d'architecture (ADR)                                              |
 | `.github`  | CI, modèles d'issue et de PR                                                |
 
-Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestations Nostr NIP-58, micro-frais Lightning, environnements testnet et mainnet).
+Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestations Nostr NIP-58, micro-frais Lightning, environnements testnet et mainnet, SDK Lightning Breez Spark).
 
 ## Contraintes
 

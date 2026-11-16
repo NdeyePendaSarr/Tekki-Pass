@@ -64,10 +64,11 @@ flowchart LR
 
 Key decisions:
 
-- [ADR 0001: self-custodial wallet](docs/adr/0001-self-custodial-wallet.md) (SDK still to be chosen)
+- [ADR 0001: self-custodial wallet](docs/adr/0001-self-custodial-wallet.md)
 - [ADR 0002: Nostr NIP-58 attestations](docs/adr/0002-nostr-nip58-attestations.md)
 - [ADR 0003: Lightning micro-fee model](docs/adr/0003-lightning-micro-fee.md)
 - [ADR 0004: testnet and mainnet environments](docs/adr/0004-testnet-and-mainnet.md)
+- [ADR 0005: Lightning SDK, Breez SDK - Spark](docs/adr/0005-lightning-sdk-breez-spark.md)
 
 ## Constraints
 
@@ -92,7 +93,6 @@ Key decisions:
 
 ## Open questions
 
-- TODO: Lightning SDK (decision due 15 Nov 2026)
 - TODO: micro-fee amount (after interviews)
 - TODO: mainnet required or testnet accepted
 - TODO: BCEAO / UEMOA regulatory framework for crypto-assets
