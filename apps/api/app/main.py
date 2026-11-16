@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from app.attestations import EventPublisher, IssuerKeys, NostrRelayPublisher
+from app.auth import Nip98Verifier
 from app.config import Network, Settings, get_settings
 from app.db import create_engine, create_schema, create_session_factory, is_sqlite
 from app.lightning.fake import FakeWalletResolver
@@ -58,6 +59,7 @@ def create_app(
         if publisher is not None
         else NostrRelayPublisher(resolved.nostr_relays, min_acks=resolved.nostr_min_relay_acks)
     )
+    app.state.nip98 = Nip98Verifier(resolved.nip98_url_prefixes)
     nsec = resolved.nostr_issuer_nsec
     app.state.issuer_pubkey = IssuerKeys(nsec.get_secret_value()).public_key if nsec else None
 
