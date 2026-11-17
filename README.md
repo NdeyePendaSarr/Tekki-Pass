@@ -73,7 +73,7 @@ How trust works:
 
 - **Proof of payment:** a paid Lightning invoice reveals a preimage whose SHA-256 is the payment hash. The attestation carries both.
 - **Proof of issuer:** the attestation is a Nostr event signed by the Tekki-Pass issuer key, published with its badge definition (kind 30009).
-- **Anyone can check:** the public page re-verifies the signature, the issuer key and the proof of payment in the visitor's browser, without trusting our server.
+- **Anyone can check:** the public page reads the attestations directly from the Nostr relays (our API is only a fallback) and re-verifies the signature, the issuer key and the proof of payment in the visitor's browser, without trusting our server.
 
 Key decisions:
 

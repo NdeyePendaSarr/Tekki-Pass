@@ -3,24 +3,30 @@
 import { nip19 } from "nostr-tools";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { QrCode } from "@/components/QrCode";
-import { api, type PublishedAttestation } from "@/lib/api";
+import { api } from "@/lib/api";
 import { shortNpub } from "@/lib/identity";
 import { errorMessage } from "@/lib/messages";
+import { fetchAwardsFromRelays, type FoundAttestation, mergeAttestations } from "@/lib/relays";
 import { type Verification, verifyAttestation } from "@/lib/verify";
 
 const noSubscription = () => () => {};
 
 interface Row {
-  attestation: PublishedAttestation;
+  found: FoundAttestation;
   verification: Verification;
 }
 
+/** How the list was obtained, shown to the verifier. */
+type Origin = "relays" | "api-only";
+
 /**
- * Public artisan page, opened by scanning the QR code. Every attestation is
- * re-verified here in the browser against the issuer key (signature + proof of payment).
+ * Public artisan page, opened by scanning the QR code. Attestations are read
+ * directly from the Nostr relays (the API is only a fallback), then each one is
+ * re-verified in the browser: signature, issuer key and proof of payment.
  */
 export function PublicProfile({ pubkey }: { pubkey: string }) {
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [origin, setOrigin] = useState<Origin | null>(null);
   const [issuer, setIssuer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The URL shown in the QR code; empty during server rendering.
@@ -31,19 +37,34 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
   );
 
   useEffect(() => {
-    Promise.all([api.issuer(), api.attestations(pubkey)])
-      .then(([issuerInfo, attestations]) => {
-        setIssuer(issuerInfo.pubkey);
-        setRows(
-          attestations.map((attestation) => ({
-            attestation,
-            verification: issuerInfo.pubkey
-              ? verifyAttestation(attestation.event_json, issuerInfo.pubkey)
-              : { ok: false, reason: "Émetteur inconnu." },
-          })),
-        );
-      })
-      .catch((e: unknown) => setError(errorMessage(e)));
+    let active = true;
+    (async () => {
+      const info = await api.issuer();
+      if (!info.pubkey) throw new Error("no issuer key");
+      const issuerPubkey = info.pubkey;
+      const [fromRelays, fromApi] = await Promise.allSettled([
+        fetchAwardsFromRelays(info.relays, issuerPubkey, pubkey),
+        api.attestations(pubkey),
+      ]);
+      if (fromRelays.status === "rejected" && fromApi.status === "rejected") throw fromApi.reason;
+      const relayEvents = fromRelays.status === "fulfilled" ? fromRelays.value : [];
+      const merged = mergeAttestations(
+        relayEvents,
+        fromApi.status === "fulfilled" ? fromApi.value : [],
+      );
+      if (!active) return;
+      setIssuer(issuerPubkey);
+      setOrigin(relayEvents.length > 0 ? "relays" : "api-only");
+      setRows(
+        merged.map((found) => ({
+          found,
+          verification: verifyAttestation(found.eventJson, issuerPubkey),
+        })),
+      );
+    })().catch((e: unknown) => active && setError(errorMessage(e)));
+    return () => {
+      active = false;
+    };
   }, [pubkey]);
 
   let npub = "";
@@ -69,6 +90,17 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
           {verified > 1 ? "s" : ""} et payé{verified > 1 ? "s" : ""}
         </p>
       )}
+      {origin === "relays" && (
+        <p className="ok small">
+          ✓ Preuves lues directement sur le réseau Nostr, sans passer par nous.
+        </p>
+      )}
+      {origin === "api-only" && rows && rows.length > 0 && (
+        <p className="muted small">
+          Réseau Nostr injoignable pour l&apos;instant : preuves fournies par Tekki-Pass, vérifiées
+          sur ce téléphone.
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="error">
@@ -79,9 +111,9 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
       {rows?.length === 0 && <p>Aucun chantier attesté pour l&apos;instant.</p>}
 
       <ul className="attestations">
-        {rows?.map(({ attestation, verification }) => (
-          <li key={attestation.event_id} className="card">
-            <h2>{attestation.title}</h2>
+        {rows?.map(({ found, verification }) => (
+          <li key={found.eventId} className="card">
+            <h2>{verification.ok ? verification.title : "Chantier"}</h2>
             {verification.ok ? (
               <p className="ok">
                 ✓ Vérifié : confirmé par le client et payé le{" "}
@@ -93,8 +125,13 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
             )}
             <details>
               <summary>Détails techniques</summary>
-              <p className="mono">Événement Nostr : {attestation.event_id}</p>
-              <p className="mono">Hash du paiement : {attestation.payment_hash}</p>
+              <p className="mono">Événement Nostr : {found.eventId}</p>
+              {verification.ok && (
+                <p className="mono">Hash du paiement : {verification.paymentHash}</p>
+              )}
+              <p className="mono">
+                Source : {found.source === "api" ? "Tekki-Pass" : "relais Nostr"}
+              </p>
             </details>
           </li>
         ))}
