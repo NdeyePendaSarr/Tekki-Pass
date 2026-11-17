@@ -32,6 +32,9 @@ from app.requests.models import AttestationRequest, RequestStatus
 #: Invoice lifetime: long enough to open a wallet app, short enough to limit stale requests.
 INVOICE_EXPIRY = timedelta(minutes=30)
 
+#: Most recent requests returned to the artisan's dashboard.
+ARTISAN_REQUESTS_LIMIT = 50
+
 #: Statuses that count towards the per-client cap (a confirmed, possibly paid, request).
 _COUNTED_STATUSES = (RequestStatus.AWAITING_PAYMENT, RequestStatus.PAID, RequestStatus.PUBLISHED)
 
@@ -153,6 +156,22 @@ class AttestationService:
         if request.status is RequestStatus.PAID:
             await self._publish(request)
         return request
+
+    async def requests_for_artisan(
+        self, artisan_pubkey: str, limit: int = ARTISAN_REQUESTS_LIMIT
+    ) -> list[AttestationRequest]:
+        """All requests of one artisan, newest first (their dashboard).
+
+        Private: the results contain the client links, so the route must
+        authenticate the artisan.
+        """
+        query = (
+            select(AttestationRequest)
+            .where(AttestationRequest.artisan_pubkey == artisan_pubkey)
+            .order_by(AttestationRequest.created_at.desc(), AttestationRequest.id.desc())
+            .limit(limit)
+        )
+        return list((await self.session.execute(query)).scalars())
 
     async def published_for_artisan(self, artisan_pubkey: str) -> list[AttestationRequest]:
         query = (

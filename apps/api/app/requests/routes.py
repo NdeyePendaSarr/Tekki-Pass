@@ -174,11 +174,17 @@ async def create_request(body: CreateRequestIn, request: Request, service: Servi
     return RequestOut.of(created)
 
 
-async def _authenticate_artisan(request: Request, artisan_pubkey: str) -> None:
-    """Enforce NIP-98 when required. When optional, a header that is present must still be valid."""
+async def _authenticate_artisan(
+    request: Request, artisan_pubkey: str, *, always: bool = False
+) -> None:
+    """Enforce NIP-98 when required. When optional, a header that is present must still be valid.
+
+    `always=True` ignores NIP98_REQUIRED: for private data (an artisan's client links),
+    an unauthenticated read must never be possible, even in local development.
+    """
     settings = request.app.state.settings
     header = request.headers.get("authorization")
-    if not settings.nip98_required and header is None:
+    if not always and not settings.nip98_required and header is None:
         return
     verifier: Nip98Verifier = request.app.state.nip98
     try:
@@ -233,6 +239,24 @@ async def refresh_request(token: str, service: Service) -> RequestOut:
         ) from exc
     except RequestError as exc:
         raise _http_error(exc) from exc
+
+
+@router.get(
+    "/artisans/{artisan_pubkey}/requests",
+    dependencies=[Depends(rate_limit("list", lambda s: s.rate_limit_list_per_minute))],
+)
+async def list_requests(
+    artisan_pubkey: Annotated[str, Path(pattern=HEX64)],
+    request: Request,
+    service: Service,
+) -> list[RequestOut]:
+    """Artisan dashboard: their requests and statuses, newest first.
+
+    Always requires a NIP-98 signature from this artisan: the response contains the
+    client links, which anyone could otherwise use to confirm a job.
+    """
+    await _authenticate_artisan(request, artisan_pubkey, always=True)
+    return [RequestOut.of(r) for r in await service.requests_for_artisan(artisan_pubkey)]
 
 
 @router.get("/artisans/{artisan_pubkey}/attestations")

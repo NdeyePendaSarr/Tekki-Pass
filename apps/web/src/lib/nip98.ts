@@ -29,6 +29,9 @@ export function nip98Header(
   const tags = [
     ["u", url],
     ["method", method.toUpperCase()],
+    // Random nonce (allowed by NIP-98): two identical requests in the same second would
+    // otherwise produce the same event, and the API would reject the second as a replay.
+    ["nonce", bytesToHex(crypto.getRandomValues(new Uint8Array(8)))],
   ];
   if (body) tags.push(["payload", bytesToHex(sha256(new TextEncoder().encode(body)))]);
   const event = finalizeEvent(
