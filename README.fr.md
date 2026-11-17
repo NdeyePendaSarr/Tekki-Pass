@@ -73,7 +73,7 @@ Comment fonctionne la confiance :
 
 - **Preuve de paiement :** une facture Lightning payée révèle une preimage dont le SHA-256 est le hash du paiement. L'attestation contient les deux.
 - **Preuve de l'émetteur :** l'attestation est un événement Nostr signé par la clé de Tekki-Pass, publié avec la définition de son badge (kind 30009).
-- **Vérifiable par tous :** la page publique revérifie la signature, la clé de l'émetteur et la preuve de paiement dans le navigateur du visiteur, sans faire confiance à notre serveur.
+- **Vérifiable par tous :** la page publique lit les attestations directement sur les relais Nostr (notre API ne sert qu'en secours) et revérifie la signature, la clé de l'émetteur et la preuve de paiement dans le navigateur du visiteur, sans faire confiance à notre serveur.
 
 Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestations Nostr NIP-58, micro-frais Lightning, environnements testnet et mainnet, SDK Lightning Breez Spark).
 

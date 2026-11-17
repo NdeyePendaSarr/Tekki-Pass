@@ -28,6 +28,8 @@ export interface PublishedAttestation {
 export interface Issuer {
   pubkey: string | null;
   network: string;
+  /** Public relays where attestations are published (read directly by the public page). */
+  relays: string[];
 }
 
 /** Error carrying the API's stable `code` (mapped to a French message by lib/messages). */

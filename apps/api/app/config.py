@@ -95,6 +95,11 @@ class Settings(BaseSettings):
     #: How many relays must accept an attestation for the publication to count.
     nostr_min_relay_acks: int = Field(default=1, ge=1)
 
+    #: Relays browsers read attestations from (verification page). Defaults to
+    #: NOSTR_RELAYS; set it when the API reaches relays by an internal address
+    #: (e.g. ws://relay:8080 in Docker) that browsers cannot use.
+    public_relays: list[str] | None = None
+
     @field_validator("nostr_issuer_nsec", "client_phone_pepper", mode="before")
     @classmethod
     def _empty_means_unset(cls, value: object) -> object:
@@ -105,6 +110,16 @@ class Settings(BaseSettings):
     @classmethod
     def _check_relay_urls(cls, relays: list[str]) -> list[str]:
         return [validate_relay_url(url) for url in relays]
+
+    @field_validator("public_relays")
+    @classmethod
+    def _check_public_relay_urls(cls, relays: list[str] | None) -> list[str] | None:
+        return None if relays is None else [validate_relay_url(url) for url in relays]
+
+    @property
+    def relays_for_browsers(self) -> list[str]:
+        """Relays the verification page should read from."""
+        return self.public_relays if self.public_relays is not None else self.nostr_relays
 
     @model_validator(mode="after")
     def _check_consistency(self) -> Self:

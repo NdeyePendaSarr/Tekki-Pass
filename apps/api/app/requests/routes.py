@@ -146,6 +146,9 @@ class PublishedAttestationOut(BaseModel):
 class IssuerOut(BaseModel):
     pubkey: str | None
     network: str
+    #: Public relays where attestations are published, so verifiers can read them
+    #: directly instead of trusting this API.
+    relays: list[str]
 
 
 class SimulatedPayment(BaseModel):
@@ -254,7 +257,11 @@ async def list_attestations(
 async def issuer(request: Request) -> IssuerOut:
     """Issuer public key the verification page must check signatures against."""
     state = request.app.state
-    return IssuerOut(pubkey=state.issuer_pubkey, network=state.settings.network)
+    return IssuerOut(
+        pubkey=state.issuer_pubkey,
+        network=state.settings.network,
+        relays=state.settings.relays_for_browsers,
+    )
 
 
 dev_router = APIRouter(prefix="/dev", tags=["development"])

@@ -28,6 +28,8 @@ services:
       LIGHTNING_BACKEND: fake
       NOSTR_RELAYS: '["ws://relay:8080"]'
       NOSTR_MIN_RELAY_ACKS: 1
+      # Browsers cannot reach ws://relay:8080: the verification page reads the published port.
+      PUBLIC_RELAYS: '["ws://localhost:${RELAY_PORT:-7777}"]'
       # Secrets come only from .env. When unset, throwaway values are generated at startup.
       DEV_GENERATE_MISSING_SECRETS: "true"
       # Artisan auth (NIP-98) is required (default). The browser signs the URL it calls:
