@@ -5,15 +5,19 @@ import { type FormEvent, useState } from "react";
 import { api, type AttestationRequest } from "@/lib/api";
 import { type Identity, shortNpub } from "@/lib/identity";
 import { errorMessage } from "@/lib/messages";
+import { clientLink, whatsappLink } from "@/lib/share";
+import { MyRequests } from "./MyRequests";
 
 const MAX_TITLE = 140;
 
-/** Artisan home: describe a finished job and send the attestation link by WhatsApp. */
+/** Artisan home: describe a finished job, send the link by WhatsApp, follow every request. */
 export function Dashboard({ identity, onLock }: { identity: Identity; onLock: () => void }) {
   const [title, setTitle] = useState("");
   const [created, setCreated] = useState<AttestationRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Bumped after each creation so the list below reloads.
+  const [version, setVersion] = useState(0);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -22,6 +26,7 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
     try {
       setCreated(await api.createRequest(identity.pubkey, title.trim(), identity.secretKey));
       setTitle("");
+      setVersion((v) => v + 1);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -29,12 +34,7 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
     }
   }
 
-  const link = created ? `${window.location.origin}/a/${created.token}` : "";
-  const whatsapp = created
-    ? `https://wa.me/?text=${encodeURIComponent(
-        `Bonjour, merci de confirmer le chantier « ${created.title} » sur Tekki-Pass : ${link}`,
-      )}`
-    : "";
+  const link = created ? clientLink(window.location.origin, created.token) : "";
 
   return (
     <section>
@@ -45,7 +45,12 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
         <div className="card">
           <h2>Lien prêt</h2>
           <p>Envoie ce lien à ton client. Il confirmera le chantier et paiera la preuve.</p>
-          <a className="button whatsapp" href={whatsapp} target="_blank" rel="noreferrer">
+          <a
+            className="button whatsapp"
+            href={whatsappLink(created.title, link)}
+            target="_blank"
+            rel="noreferrer"
+          >
             Envoyer par WhatsApp
           </a>
           <p className="link-box">{link}</p>
@@ -76,6 +81,8 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
           </button>
         </form>
       )}
+
+      <MyRequests identity={identity} version={version} />
 
       <Link className="button secondary" href={`/p/${identity.pubkey}`}>
         Voir ma page publique
