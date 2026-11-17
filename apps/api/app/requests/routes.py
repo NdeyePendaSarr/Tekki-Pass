@@ -18,6 +18,7 @@ from app.config import Settings
 from app.db import session_scope
 from app.lightning.fake import FakeWalletResolver
 from app.ratelimit import retry_after_header
+from app.requests.demo import seed_demo_attestations
 from app.requests.models import AttestationRequest, RequestStatus
 from app.requests.service import (
     AttestationService,
@@ -305,3 +306,26 @@ async def simulate_payment(token: str, request: Request, service: Service) -> Si
         raise _http_error(InvalidStateError("the client has not confirmed yet"))
     wallets.wallet.mark_paid(found.payment_hash)
     return SimulatedPayment(status="paid")
+
+
+@dev_router.post(
+    "/artisans/{artisan_pubkey}/seed-demo",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("seed", lambda s: s.rate_limit_create_per_minute))],
+)
+async def seed_demo(
+    artisan_pubkey: Annotated[str, Path(pattern=HEX64)], request: Request, service: Service
+) -> list[RequestOut]:
+    """Fake backend only: publish a few demo attestations for this artisan.
+
+    Same flow as a real job (signed by the issuer, published to the relays), so the
+    public page and the dashboard show realistic data for the demo and the video.
+    """
+    wallets = request.app.state.wallets
+    if not isinstance(wallets, FakeWalletResolver):  # defensive: router not mounted otherwise
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    try:
+        published = await seed_demo_attestations(service, wallets.wallet, artisan_pubkey)
+    except RequestError as exc:
+        raise _http_error(exc) from exc
+    return [RequestOut.of(r) for r in published]
