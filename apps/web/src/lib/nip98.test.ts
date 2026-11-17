@@ -38,12 +38,15 @@ describe("nip98Header", () => {
     expect(event.created_at).toBe(1_763_200_000);
   });
 
-  it("produces a different event each time (the API refuses replays)", () => {
+  it("produces a different event each time, even in the same second (the API refuses replays)", () => {
     const key = generateSecretKey();
-    const first = decode(nip98Header(key, URL_, "POST", "{}"));
-    const second = decode(nip98Header(key, URL_, "POST", "{}", new Date(Date.now() + 1000)));
+    const now = new Date(1_763_200_000_000);
+    const first = decode(nip98Header(key, URL_, "GET", undefined, now));
+    const second = decode(nip98Header(key, URL_, "GET", undefined, now));
 
+    expect(first.created_at).toBe(second.created_at);
     expect(first.id).not.toBe(second.id);
+    expect(tag(first, "nonce")).toMatch(/^[0-9a-f]{16}$/);
   });
 });
 

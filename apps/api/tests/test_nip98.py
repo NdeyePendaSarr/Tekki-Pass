@@ -34,8 +34,12 @@ def auth_header(
     body: bytes = b"",
     kind: int = 27235,
     payload: str | None = None,
+    nonce: str | None = None,
 ) -> str:
     tags = [["u", url], ["method", method]]
+    if nonce is not None:
+        # Extra tags are allowed by NIP-98; a nonce makes two requests in the same second differ.
+        tags.append(["nonce", nonce])
     if body or payload is not None:
         tags.append(
             ["payload", payload if payload is not None else hashlib.sha256(body).hexdigest()]

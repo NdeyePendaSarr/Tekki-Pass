@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     rate_limit_confirm_per_minute: int = Field(default=10, ge=1)
     #: The client page checks the payment every 3 s (20/min): leave headroom for two tabs.
     rate_limit_refresh_per_minute: int = Field(default=40, ge=1)
+    #: Artisan dashboard refreshes (list of their requests).
+    rate_limit_list_per_minute: int = Field(default=30, ge=1)
 
     #: Networks of reverse proxies whose X-Forwarded-For header is trusted (env: JSON array,
     #: e.g. ["10.0.0.0/8"]). Empty by default: the header is ignored and the peer IP is used.
