@@ -4,6 +4,6 @@ export default {
   extends: ["@commitlint/config-conventional"],
   rules: {
     // Keep the scope list short and aligned with the monorepo layout.
-    "scope-enum": [2, "always", ["api", "web", "docs", "adr", "ci", "docker", "deps", "github"]],
+    "scope-enum": [2, "always", ["api", "web", "docs", "adr", "ci", "docker", "deploy", "deps", "github"]],
   },
 };

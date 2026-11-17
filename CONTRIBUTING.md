@@ -33,7 +33,7 @@ Format: `type(scope): summary` in the imperative, lower case, no final period. C
 | `ci`       | GitHub Actions                            |
 | `chore`    | Anything else (repo maintenance)          |
 
-Scopes (optional): `api`, `web`, `docs`, `adr`, `ci`, `docker`, `deps`, `github`.
+Scopes (optional): `api`, `web`, `docs`, `adr`, `ci`, `docker`, `deploy`, `deps`, `github`.
 
 Examples:
 
