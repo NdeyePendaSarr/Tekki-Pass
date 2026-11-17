@@ -74,8 +74,12 @@ jobs:
         run: npm run typecheck
       - name: Vitest
         run: npm test
-      - name: npm audit
-        run: npm audit --audit-level=high
+      # Shipped code: fail on high. Dev-only tools (Vite, Vitest, ESLint) never reach users
+      # and sometimes wait days for an upstream fix: fail on critical only.
+      - name: npm audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (all dependencies)
+        run: npm audit --audit-level=critical
 
   docker:
     name: Docker build
