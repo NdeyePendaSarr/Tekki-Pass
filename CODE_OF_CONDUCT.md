@@ -21,4 +21,4 @@ We want participation in Tekki-Pass to be harassment-free for everyone, regardle
 
 ## Enforcement
 
-Report incidents to the maintainers at **TODO: contact address**. All reports are reviewed promptly and confidentially. Maintainers may remove contributions or ban contributors who do not follow this code, following the enforcement guidelines of the Contributor Covenant.
+Report incidents privately to a maintainer on GitHub: **NdeyePendaSarr** or **demeBachir01** (project lead). Do not report in a public issue or pull request. All reports are reviewed promptly and confidentially. Maintainers may remove contributions or ban contributors who do not follow this code, following the enforcement guidelines of the Contributor Covenant.
