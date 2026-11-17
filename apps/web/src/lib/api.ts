@@ -95,6 +95,11 @@ export const api = {
       body: { artisan_pubkey: artisanPubkey, title },
       signWith: secretKey,
     }),
+  /** The artisan's own requests, newest first. Always signed: it contains the client links. */
+  myRequests: (artisanPubkey: string, secretKey: Uint8Array) =>
+    call<AttestationRequest[]>(`/artisans/${encodeURIComponent(artisanPubkey)}/requests`, {
+      signWith: secretKey,
+    }),
   getRequest: (token: string) =>
     call<AttestationRequest>(`/attestation-requests/${encodeURIComponent(token)}`),
   confirm: (token: string, clientPhone: string) =>
