@@ -1,0 +1,21 @@
+# Caddy: automatic HTTPS (Let's Encrypt) for $DOMAIN, single entry point of the server.
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Our Nostr relay, for the verification page: wss://$DOMAIN/relay
+	handle_path /relay* {
+		reverse_proxy relay:8080
+	}
+
+	# Everything else: the Next.js app (it proxies /api/* to the API).
+	handle {
+		reverse_proxy web:3000
+	}
+}

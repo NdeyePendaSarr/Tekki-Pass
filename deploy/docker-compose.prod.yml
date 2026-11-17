@@ -1,0 +1,93 @@
+# Production stack for a single server (VPS). See deploy/README.md.
+#
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+#
+# Only Caddy is reachable from the internet (ports 80/443, automatic HTTPS):
+#   https://$DOMAIN/          -> web (Next.js, which proxies /api to the API)
+#   wss://$DOMAIN/relay       -> our Nostr relay (attestations are published there)
+# The API, PostgreSQL and the relay are only on the internal Docker network.
+
+name: tekki-pass-prod
+
+services:
+  caddy:
+    image: caddy:2.11-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+      - relay
+
+  web:
+    build: ../apps/web
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    build: ../apps/api
+    restart: unless-stopped
+    environment:
+      NETWORK: ${NETWORK:-testnet}
+      DATABASE_URL: postgresql://tekki:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/tekki_pass
+      # Real, stable secrets: never generated at startup in production (the issuer key
+      # must not change, or earlier attestations could no longer be checked).
+      NOSTR_ISSUER_NSEC: ${NOSTR_ISSUER_NSEC:?set NOSTR_ISSUER_NSEC}
+      CLIENT_PHONE_PEPPER: ${CLIENT_PHONE_PEPPER:?set CLIENT_PHONE_PEPPER}
+      DEV_GENERATE_MISSING_SECRETS: "false"
+      # Until the Breez API key arrives (docs/adr/0005), payments are simulated. The fake
+      # backend may only publish to a relay on our own network: the one below.
+      LIGHTNING_BACKEND: ${LIGHTNING_BACKEND:-fake}
+      NOSTR_RELAYS: '["ws://relay:8080"]'
+      NOSTR_MIN_RELAY_ACKS: 1
+      # What browsers use to read attestations (verification page).
+      PUBLIC_RELAYS: '["wss://${DOMAIN}/relay"]'
+      # Artisans sign the URL their browser calls: the web proxy on the public domain.
+      NIP98_URL_PREFIXES: '["https://${DOMAIN}/api"]'
+      # Requests reach the API through Caddy then the web proxy, both on the Docker
+      # network: trust their X-Forwarded-For so rate limits apply per real client.
+      TRUSTED_PROXIES: '["172.16.0.0/12", "10.0.0.0/8", "192.168.0.0/16"]'
+    depends_on:
+      db:
+        condition: service_healthy
+      relay:
+        condition: service_started
+
+  relay:
+    image: scsibug/nostr-rs-relay:0.10.0
+    restart: unless-stopped
+    volumes:
+      - relay-data:/usr/src/app/db
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tekki
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: tekki_pass
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tekki -d tekki_pass"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  caddy-data:
+  caddy-config:
+  relay-data:
+  db-data:
