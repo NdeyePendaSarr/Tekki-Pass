@@ -1,7 +1,6 @@
 """FastAPI application entry point."""
 
 import asyncio
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Literal
@@ -15,6 +14,7 @@ from app.auth import Nip98Verifier
 from app.config import Network, Settings, get_settings
 from app.db import create_engine, create_schema, create_session_factory, is_sqlite
 from app.lightning.fake import FakeWalletResolver
+from app.observability import RequestLogMiddleware, configure_logging
 from app.ratelimit import ClientIdentifier, RateLimiter
 from app.requests.routes import dev_router, router
 from app.requests.service import WalletResolver
@@ -31,17 +31,6 @@ def _wallets_for(settings: Settings) -> WalletResolver:
     if settings.lightning_backend == "fake":
         return FakeWalletResolver()
     raise NotImplementedError(settings.lightning_backend)  # pragma: no cover
-
-
-def _configure_logging() -> None:
-    """Minimal logging so the API's own INFO messages are visible (uvicorn only configures its
-    own loggers). Structured, PII-free logging is a separate task (B5)."""
-    app_logger = logging.getLogger("app")
-    if not app_logger.handlers:
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter("%(levelname)s:     %(name)s - %(message)s"))
-        app_logger.addHandler(handler)
-        app_logger.setLevel(logging.INFO)
 
 
 #: Upper bound on how long shutdown waits for the badge definition publication.
@@ -74,7 +63,7 @@ def create_app(
     A factory keeps tests isolated: each test passes its own settings and fakes
     instead of mutating the process environment.
     """
-    _configure_logging()
+    configure_logging()
     resolved = (settings if settings is not None else get_settings()).with_dev_secrets()
 
     @asynccontextmanager
@@ -94,6 +83,7 @@ def create_app(
 
     app = FastAPI(title="Tekki-Pass API", version="0.1.0", lifespan=lifespan)
     app.state.settings = resolved
+    app.add_middleware(RequestLogMiddleware)
     app.state.wallets = wallets if wallets is not None else _wallets_for(resolved)
     app.state.publisher = (
         publisher
