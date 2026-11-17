@@ -66,10 +66,8 @@ def _route_template(scope: Scope) -> str:
 
     The router stores the matched route in the scope; nothing matched: "unmatched".
     """
-    path: object = getattr(scope.get("route"), "path", None)
-    if isinstance(path, str):
-        return path
-    return "unmatched"
+    path = getattr(scope.get("route"), "path", None)
+    return str(path) if isinstance(path, str) else "unmatched"
 
 
 def _request_id(scope: Scope) -> str:
