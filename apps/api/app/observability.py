@@ -67,12 +67,13 @@ def _route_template(scope: Scope) -> str:
     The router stores the matched route in the scope; nothing matched: "unmatched".
     """
     path = getattr(scope.get("route"), "path", None)
-    return str(path) if isinstance(path, str) else "unmatched"
+    return path if isinstance(path, str) else "unmatched"
 
 
 def _request_id(scope: Scope) -> str:
     for name, value in scope.get("headers", ()):
-        if name == REQUEST_ID_HEADER.lower().encode():
+        # ASGI headers are typed Any: only accept real bytes.
+        if name == REQUEST_ID_HEADER.lower().encode() and isinstance(value, bytes):
             candidate = value.decode("latin-1")
             if _VALID_REQUEST_ID.fullmatch(candidate):
                 return candidate
