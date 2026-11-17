@@ -18,6 +18,7 @@ from app.attestations.definition import publish_badge_definition, publish_badge_
 from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 
 TEST_RELAY = os.environ.get("NOSTR_TEST_RELAY_URL")
@@ -29,7 +30,7 @@ def tags_of(event_json: str) -> dict[str, str]:
 
 def make_settings(issuer: IssuerKeys | None, **overrides: object) -> Settings:
     values: dict[str, object] = {
-        "database_url": "sqlite+aiosqlite:///:memory:",
+        "database_url": TEST_DATABASE_URL,
         "nostr_issuer_nsec": SecretStr(issuer._keys.secret_key().to_hex()) if issuer else None,
     }
     values.update(overrides)

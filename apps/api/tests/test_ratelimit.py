@@ -10,6 +10,7 @@ from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
 from app.ratelimit import ClientIdentifier, RateLimiter, retry_after_header
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 
 ARTISAN = "a" * 64
@@ -100,7 +101,7 @@ def test_invalid_proxy_network_fails_at_startup() -> None:
 
 def make_client(**overrides: object) -> TestClient:
     values: dict[str, object] = {
-        "database_url": "sqlite+aiosqlite:///:memory:",
+        "database_url": TEST_DATABASE_URL,
         "client_phone_pepper": SecretStr("test-pepper"),
         "nip98_required": False,
         "publish_badge_definition_on_startup": False,

@@ -16,6 +16,7 @@ from app.auth import Nip98Error, Nip98Verifier
 from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 
 API = "http://localhost:8000"
@@ -138,7 +139,7 @@ def test_rejects_a_replayed_header(verifier: Nip98Verifier) -> None:
 
 def make_client(*, required: bool) -> TestClient:
     settings = Settings(
-        database_url="sqlite+aiosqlite:///:memory:",
+        database_url=TEST_DATABASE_URL,
         client_phone_pepper=SecretStr("test-pepper"),
         nip98_required=required,
         nip98_url_prefixes=[API],

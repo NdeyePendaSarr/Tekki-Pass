@@ -19,13 +19,30 @@ jobs:
     name: API (ruff, mypy, pytest, pip-audit)
     runs-on: ubuntu-latest
     # Local relay so publication is tested for real, without touching public relays.
+    # PostgreSQL, as in production: tests and migrations run on the real engine.
     services:
       relay:
         image: scsibug/nostr-rs-relay:0.10.0
         ports:
           - 8080:8080
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tekki
+          POSTGRES_PASSWORD: tekki-ci-only
+          POSTGRES_DB: tekki_pass_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tekki -d tekki_pass_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
       NOSTR_TEST_RELAY_URL: ws://localhost:8080
+      # Throwaway database of this job only, never reachable from outside the runner.
+      DATABASE_URL: postgresql://tekki:tekki-ci-only@localhost:5432/tekki_pass_test
+      TEST_DATABASE_URL: postgresql://tekki:tekki-ci-only@localhost:5432/tekki_pass_test
     defaults:
       run:
         working-directory: apps/api
@@ -45,7 +62,12 @@ jobs:
         run: uv run --frozen ruff format --check .
       - name: Mypy (strict)
         run: uv run --frozen mypy
-      - name: Pytest
+      # Migrations apply on an empty database and match the models exactly.
+      - name: Alembic (upgrade, check)
+        run: |
+          uv run --frozen alembic upgrade head
+          uv run --frozen alembic check
+      - name: Pytest (PostgreSQL)
         run: uv run --frozen pytest
       - name: pip-audit (known vulnerabilities)
         run: |

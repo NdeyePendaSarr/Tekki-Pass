@@ -13,6 +13,7 @@ from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
 from app.requests.demo import DEMO_JOBS, demo_client_phone
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 
 
@@ -28,7 +29,7 @@ def publisher() -> FakePublisher:
 
 def make_client(issuer: IssuerKeys, publisher: FakePublisher, **overrides: object) -> TestClient:
     values: dict[str, object] = {
-        "database_url": "sqlite+aiosqlite:///:memory:",
+        "database_url": TEST_DATABASE_URL,
         "client_phone_pepper": SecretStr("test-pepper"),
         "nostr_issuer_nsec": SecretStr(issuer._keys.secret_key().to_hex()),
         "publish_badge_definition_on_startup": False,
@@ -86,7 +87,7 @@ def test_seed_can_run_again_without_hitting_the_client_cap(client: TestClient) -
 def test_seed_needs_the_issuer_key(publisher: FakePublisher) -> None:
     app = create_app(
         Settings(
-            database_url="sqlite+aiosqlite:///:memory:",
+            database_url=TEST_DATABASE_URL,
             client_phone_pepper=SecretStr("test-pepper"),
             publish_badge_definition_on_startup=False,
         ),
