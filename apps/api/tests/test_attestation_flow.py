@@ -14,6 +14,7 @@ from app.attestations import IssuerKeys, verify_attestation
 from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 
 PHONE = "77 123 45 67"
@@ -36,7 +37,7 @@ def publisher() -> FakePublisher:
 
 def make_settings(issuer: IssuerKeys | None, **overrides: object) -> Settings:
     values: dict[str, object] = {
-        "database_url": "sqlite+aiosqlite:///:memory:",
+        "database_url": TEST_DATABASE_URL,
         "client_phone_pepper": SecretStr("test-pepper"),
         "nostr_issuer_nsec": SecretStr(issuer._keys.secret_key().to_hex()) if issuer else None,
         "max_attestations_per_client": 2,

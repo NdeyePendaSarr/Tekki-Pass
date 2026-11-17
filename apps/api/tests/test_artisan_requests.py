@@ -13,6 +13,7 @@ from app.attestations import IssuerKeys
 from app.config import Settings
 from app.lightning.fake import FakeWalletResolver
 from app.main import create_app
+from tests.database import TEST_DATABASE_URL
 from tests.fakes.fake_publisher import FakePublisher
 from tests.test_nip98 import API, auth_header
 
@@ -21,7 +22,7 @@ Keys = IssuerKeys
 
 def make_client(**overrides: object) -> TestClient:
     values: dict[str, object] = {
-        "database_url": "sqlite+aiosqlite:///:memory:",
+        "database_url": TEST_DATABASE_URL,
         "client_phone_pepper": SecretStr("test-pepper"),
         "publish_badge_definition_on_startup": False,
         "nip98_url_prefixes": [API],

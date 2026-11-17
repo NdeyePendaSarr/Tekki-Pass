@@ -6,10 +6,11 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.main import create_app
+from tests.database import TEST_DATABASE_URL
 
 
 def issuer_info(**settings: object) -> dict[str, object]:
-    app = create_app(Settings(database_url="sqlite+aiosqlite:///:memory:", **settings))  # type: ignore[arg-type]
+    app = create_app(Settings(database_url=TEST_DATABASE_URL, **settings))  # type: ignore[arg-type]
     with TestClient(app) as client:
         response = client.get("/issuer")
     assert response.status_code == 200
