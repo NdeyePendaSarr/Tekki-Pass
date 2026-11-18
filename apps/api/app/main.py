@@ -14,6 +14,7 @@ from app.auth import Nip98Verifier
 from app.config import Network, Settings, get_settings
 from app.db import create_engine, create_schema, create_session_factory, is_sqlite
 from app.lightning.fake import FakeWalletResolver
+from app.lightning.lnurl import LnurlWalletResolver
 from app.observability import RequestLogMiddleware, configure_logging
 from app.ratelimit import ClientIdentifier, RateLimiter
 from app.requests.routes import dev_router, router
@@ -28,9 +29,11 @@ class HealthResponse(BaseModel):
 
 
 def _wallets_for(settings: Settings) -> WalletResolver:
-    if settings.lightning_backend == "fake":
-        return FakeWalletResolver()
-    raise NotImplementedError(settings.lightning_backend)  # pragma: no cover
+    if settings.lightning_backend == "lnurl":
+        return LnurlWalletResolver(
+            network=settings.network, allowed_domains=settings.lnurl_allowed_domains
+        )
+    return FakeWalletResolver()
 
 
 #: Upper bound on how long shutdown waits for the badge definition publication.
@@ -79,6 +82,8 @@ def create_app(
             done, _ = await asyncio.wait({badge_task}, timeout=BADGE_SHUTDOWN_GRACE_SECONDS)
             if not done:
                 badge_task.cancel()
+        if isinstance(app.state.wallets, LnurlWalletResolver):
+            await app.state.wallets.aclose()
         await engine.dispose()
 
     app = FastAPI(title="Tekki-Pass API", version="0.1.0", lifespan=lifespan)
