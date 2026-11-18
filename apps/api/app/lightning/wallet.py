@@ -19,6 +19,13 @@ class InvoiceNotFoundError(LookupError):
     """Raised when a payment hash does not match any invoice known to the wallet."""
 
 
+class WalletUnavailableError(Exception):
+    """The artisan's wallet could not be reached or gave an unusable answer.
+
+    Usually temporary (network, wallet provider down): the caller may retry later.
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class Invoice:
     """A BOLT 11 invoice the client pays to attest a job."""
@@ -30,6 +37,9 @@ class Invoice:
     amount_sat: int
     memo: str
     expires_at: datetime
+    #: LUD-21 URL where anyone can check the payment (wallets behind a Lightning address).
+    #: Stored with the request and given back to `check_payment`.
+    verify_url: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,11 +74,16 @@ class LightningWallet(Protocol):
         """Create an invoice payable to the artisan's wallet."""
         ...
 
-    async def check_payment(self, payment_hash: str) -> PaymentStatus:
+    async def check_payment(
+        self, payment_hash: str, verify_url: str | None = None
+    ) -> PaymentStatus:
         """Return whether the invoice is paid and, if so, its preimage.
+
+        `verify_url` is the one returned with the invoice, if any.
 
         Raises:
             InvoiceNotFoundError: if the payment hash is unknown.
+            WalletUnavailableError: if the wallet cannot be reached right now.
         """
         ...
 

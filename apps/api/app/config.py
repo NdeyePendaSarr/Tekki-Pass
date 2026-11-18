@@ -20,9 +20,11 @@ from app.types import Network
 
 __all__ = ["LightningBackend", "Network", "Settings", "get_settings"]
 
-#: "fake" settles invoices on demand (development and demo only). The real backend
-#: (Lightning address + LUD-21, docs/adr/0005) comes with the Breez API key.
-LightningBackend = Literal["fake"]
+#: "fake" settles invoices on demand (development and demo only).
+#: "lnurl": real payments to the artisan's Lightning address, checked with LUD-21
+#: (docs/adr/0005). It needs no key on the API: the Breez key is only used by the
+#: artisan's wallet, in the browser.
+LightningBackend = Literal["fake", "lnurl"]
 
 
 class Settings(BaseSettings):
@@ -38,6 +40,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./tekki-dev.db"
 
     lightning_backend: LightningBackend = "fake"
+
+    #: "lnurl" backend: Lightning address domains the API may query (env: JSON array,
+    #: e.g. ["breez.tips"]). Empty: any public domain. Subdomains are included.
+    lnurl_allowed_domains: list[str] = Field(default_factory=list)
 
     #: Local demo only: generate a throwaway issuer key and pepper when they are missing,
     #: so `docker compose up` works with no setup. Refused with a real Lightning backend.

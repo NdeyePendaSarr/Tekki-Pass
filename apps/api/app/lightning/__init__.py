@@ -1,10 +1,11 @@
-"""Lightning wallet abstraction (the concrete SDK is not chosen yet, see docs/adr/0001)."""
+"""Lightning wallet abstraction (docs/adr/0001, docs/adr/0005)."""
 
 from app.lightning.wallet import (
     Invoice,
     InvoiceNotFoundError,
     LightningWallet,
     PaymentStatus,
+    WalletUnavailableError,
     preimage_matches,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "InvoiceNotFoundError",
     "LightningWallet",
     "PaymentStatus",
+    "WalletUnavailableError",
     "preimage_matches",
 ]
