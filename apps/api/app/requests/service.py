@@ -26,7 +26,7 @@ from app.attestations import (
     sign_attestation,
 )
 from app.config import Settings
-from app.lightning import LightningWallet
+from app.lightning import LightningWallet, WalletUnavailableError
 from app.requests.models import AttestationRequest, RequestStatus
 
 #: Invoice lifetime: long enough to open a wallet app, short enough to limit stale requests.
@@ -41,6 +41,9 @@ _COUNTED_STATUSES = (RequestStatus.AWAITING_PAYMENT, RequestStatus.PAID, Request
 
 class WalletResolver(Protocol):
     """Gives the wallet that receives the fee for a given artisan."""
+
+    #: True when invoices come from the artisan's Lightning address (real payments).
+    requires_lightning_address: bool
 
     def wallet_for(self, lightning_address: str | None) -> LightningWallet: ...
 
@@ -67,6 +70,18 @@ class NotConfiguredError(RequestError):
     """A server secret (issuer key, pepper) is missing: an operator problem, not the user's."""
 
     code = "not_configured"
+
+
+class LightningAddressRequiredError(RequestError):
+    """Real payments go to the artisan's Lightning address: the request must give one."""
+
+    code = "lightning_address_required"
+
+
+class WalletUnreachableError(RequestError):
+    """The artisan's wallet provider did not answer usably. Temporary: retry later."""
+
+    code = "wallet_unavailable"
 
 
 class PublicationFailedError(RequestError):
@@ -96,6 +111,8 @@ class AttestationService:
         self, artisan_pubkey: str, title: str, lightning_address: str | None
     ) -> AttestationRequest:
         """Artisan side: register a job and get the token for the client link."""
+        if lightning_address is None and self.wallets.requires_lightning_address:
+            raise LightningAddressRequiredError("create your wallet first: no Lightning address")
         request = AttestationRequest(
             token=secrets.token_urlsafe(16),
             artisan_pubkey=artisan_pubkey,
@@ -132,15 +149,19 @@ class AttestationService:
         client_hash = hash_client_phone(client_phone, pepper.get_secret_value())
         await self._enforce_client_cap(client_hash)
 
-        wallet = self.wallets.wallet_for(request.lightning_address)
-        invoice = await wallet.create_invoice(
-            amount_sat=request.amount_sat,
-            memo=f"Tekki-Pass: {request.title}",
-            expiry_seconds=int(INVOICE_EXPIRY.total_seconds()),
-        )
+        try:
+            wallet = self.wallets.wallet_for(request.lightning_address)
+            invoice = await wallet.create_invoice(
+                amount_sat=request.amount_sat,
+                memo=f"Tekki-Pass: {request.title}",
+                expiry_seconds=int(INVOICE_EXPIRY.total_seconds()),
+            )
+        except WalletUnavailableError as exc:
+            raise WalletUnreachableError(str(exc)) from exc
         request.client_hash = client_hash
         request.bolt11 = invoice.bolt11
         request.payment_hash = invoice.payment_hash
+        request.verify_url = invoice.verify_url
         request.invoice_expires_at = invoice.expires_at
         request.confirmed_at = self.now()
         request.status = RequestStatus.AWAITING_PAYMENT
@@ -198,9 +219,12 @@ class AttestationService:
 
     async def _check_payment(self, request: AttestationRequest) -> None:
         assert request.payment_hash is not None  # set by confirm()  # noqa: S101
-        status = await self.wallets.wallet_for(request.lightning_address).check_payment(
-            request.payment_hash
-        )
+        try:
+            status = await self.wallets.wallet_for(request.lightning_address).check_payment(
+                request.payment_hash, verify_url=request.verify_url
+            )
+        except WalletUnavailableError as exc:
+            raise WalletUnreachableError(str(exc)) from exc
         if status.paid:
             request.preimage = status.preimage
             request.status = RequestStatus.PAID

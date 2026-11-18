@@ -24,10 +24,12 @@ from app.requests.service import (
     AttestationService,
     ClientCapReachedError,
     InvalidStateError,
+    LightningAddressRequiredError,
     NotConfiguredError,
     PublicationFailedError,
     RequestError,
     RequestNotFoundError,
+    WalletUnreachableError,
 )
 
 HEX64 = r"^[0-9a-f]{64}$"
@@ -40,6 +42,8 @@ _HTTP_STATUS: dict[type[RequestError], int] = {
     ClientCapReachedError: status.HTTP_429_TOO_MANY_REQUESTS,
     NotConfiguredError: status.HTTP_503_SERVICE_UNAVAILABLE,
     PublicationFailedError: status.HTTP_502_BAD_GATEWAY,
+    LightningAddressRequiredError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    WalletUnreachableError: status.HTTP_502_BAD_GATEWAY,
 }
 
 
@@ -171,7 +175,12 @@ async def create_request(body: CreateRequestIn, request: Request, service: Servi
     nobody can create requests in someone else's name.
     """
     await _authenticate_artisan(request, body.artisan_pubkey)
-    created = await service.create(body.artisan_pubkey, body.title.strip(), body.lightning_address)
+    try:
+        created = await service.create(
+            body.artisan_pubkey, body.title.strip(), body.lightning_address
+        )
+    except RequestError as exc:
+        raise _http_error(exc) from exc
     return RequestOut.of(created)
 
 

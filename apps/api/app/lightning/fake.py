@@ -46,7 +46,9 @@ class FakeLightningWallet:
         self._entries[payment_hash] = _Entry(invoice=invoice, preimage=preimage.hex())
         return invoice
 
-    async def check_payment(self, payment_hash: str) -> PaymentStatus:
+    async def check_payment(
+        self, payment_hash: str, verify_url: str | None = None
+    ) -> PaymentStatus:
         entry = self._entry(payment_hash)
         if entry.paid:
             return PaymentStatus(paid=True, preimage=entry.preimage)
@@ -68,6 +70,9 @@ class FakeWalletResolver:
 
     def __init__(self, wallet: FakeLightningWallet | None = None) -> None:
         self.wallet = wallet if wallet is not None else FakeLightningWallet()
+
+    #: Payments are simulated: requests need no Lightning address.
+    requires_lightning_address = False
 
     def wallet_for(self, lightning_address: str | None) -> FakeLightningWallet:
         return self.wallet

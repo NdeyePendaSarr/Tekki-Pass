@@ -49,6 +49,8 @@ class AttestationRequest(Base):
 
     client_hash: Mapped[str | None] = mapped_column(String(64))
     bolt11: Mapped[str | None] = mapped_column(Text)
+    #: LUD-21 URL to check the payment (real wallets behind a Lightning address).
+    verify_url: Mapped[str | None] = mapped_column(Text)
     payment_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
     preimage: Mapped[str | None] = mapped_column(String(64))
     invoice_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
