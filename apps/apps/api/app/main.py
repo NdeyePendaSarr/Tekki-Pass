@@ -1,0 +1,116 @@
+"""FastAPI application entry point."""
+
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from typing import Literal
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from app.attestations import EventPublisher, IssuerKeys, NostrRelayPublisher, PublishResult
+from app.attestations.definition import publish_badge_definition_safely
+from app.auth import Nip98Verifier
+from app.config import Network, Settings, get_settings
+from app.db import create_engine, create_schema, create_session_factory, is_sqlite
+from app.lightning.fake import FakeWalletResolver
+from app.lightning.lnurl import LnurlWalletResolver
+from app.observability import RequestLogMiddleware, configure_logging
+from app.ratelimit import ClientIdentifier, RateLimiter
+from app.requests.routes import dev_router, router
+from app.requests.service import WalletResolver
+
+
+class HealthResponse(BaseModel):
+    """Payload returned by the liveness probe."""
+
+    status: Literal["ok"]
+    network: Network
+
+
+def _wallets_for(settings: Settings) -> WalletResolver:
+    if settings.lightning_backend == "lnurl":
+        return LnurlWalletResolver(
+            network=settings.network, allowed_domains=settings.lnurl_allowed_domains
+        )
+    return FakeWalletResolver()
+
+
+#: Upper bound on how long shutdown waits for the badge definition publication.
+BADGE_SHUTDOWN_GRACE_SECONDS = 15
+
+
+def _start_badge_definition(app: FastAPI) -> "asyncio.Task[PublishResult | None] | None":
+    """Publish the badge definition in the background, if enabled and an issuer key exists."""
+    settings: Settings = app.state.settings
+    nsec = settings.nostr_issuer_nsec
+    if not settings.publish_badge_definition_on_startup or nsec is None:
+        return None
+    task = asyncio.create_task(
+        publish_badge_definition_safely(
+            IssuerKeys(nsec.get_secret_value()), app.state.publisher, settings.badge_image_url
+        )
+    )
+    app.state.badge_definition_task = task
+    return task
+
+
+def create_app(
+    settings: Settings | None = None,
+    *,
+    wallets: WalletResolver | None = None,
+    publisher: EventPublisher | None = None,
+) -> FastAPI:
+    """Build the application.
+
+    A factory keeps tests isolated: each test passes its own settings and fakes
+    instead of mutating the process environment.
+    """
+    configure_logging()
+    resolved = (settings if settings is not None else get_settings()).with_dev_secrets()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        engine = create_engine(resolved.database_url)
+        if is_sqlite(resolved.database_url):
+            await create_schema(engine)  # PostgreSQL schema comes from Alembic migrations
+        app.state.session_factory = create_session_factory(engine)
+        badge_task = _start_badge_definition(app)
+        yield
+        if badge_task is not None:
+            # Let a slow publication finish (bounded), so shutdown never hangs on relays.
+            done, _ = await asyncio.wait({badge_task}, timeout=BADGE_SHUTDOWN_GRACE_SECONDS)
+            if not done:
+                badge_task.cancel()
+        if isinstance(app.state.wallets, LnurlWalletResolver):
+            await app.state.wallets.aclose()
+        await engine.dispose()
+
+    app = FastAPI(title="Tekki-Pass API", version="0.1.0", lifespan=lifespan)
+    app.state.settings = resolved
+    app.add_middleware(RequestLogMiddleware)
+    app.state.wallets = wallets if wallets is not None else _wallets_for(resolved)
+    app.state.publisher = (
+        publisher
+        if publisher is not None
+        else NostrRelayPublisher(resolved.nostr_relays, min_acks=resolved.nostr_min_relay_acks)
+    )
+    app.state.nip98 = Nip98Verifier(resolved.nip98_url_prefixes)
+    app.state.rate_limiter = RateLimiter()
+    app.state.client_identifier = ClientIdentifier(resolved.trusted_proxies)
+    nsec = resolved.nostr_issuer_nsec
+    app.state.issuer_pubkey = IssuerKeys(nsec.get_secret_value()).public_key if nsec else None
+
+    @app.get("/health", response_model=HealthResponse, tags=["ops"])
+    def health() -> HealthResponse:
+        """Liveness probe used by Docker and the deployment platform."""
+        return HealthResponse(status="ok", network=resolved.network)
+
+    app.include_router(router)
+    if isinstance(app.state.wallets, FakeWalletResolver):
+        app.include_router(dev_router)
+
+    return app
+
+
+app = create_app()
