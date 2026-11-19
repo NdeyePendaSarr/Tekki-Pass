@@ -13,9 +13,9 @@ internet ──443──> Caddy ──> web (Next.js) ──/api──> API ─�
   the public page reads them.
 - The API, the database and the relay are not reachable directly from the internet.
 
-> **Payments are simulated** until the Breez API key arrives (docs/adr/0005). This is
-> safe: the fake backend is refused on mainnet and may only publish to our own relay,
-> so nothing fake reaches public Nostr relays.
+> **Payments are simulated** until the Breez API key arrives (docs/adr/0005); step 6
+> switches to real payments. This is safe: the fake backend is refused on mainnet and
+> may only publish to our own relay, so nothing fake reaches public Nostr relays.
 
 ## 1. Server
 
@@ -89,6 +89,27 @@ docker compose -f deploy/docker-compose.prod.yml exec db pg_dump -U tekki tekki_
 
 Attestations are also on the relay. Once real payments are on, add public relays to
 `NOSTR_RELAYS` so the proofs survive the server (docs/adr/0002).
+
+## 6. Real payments (once the Breez API key is here)
+
+Payments are simulated until then. To switch to real sats (docs/adr/0005):
+
+1. In `deploy/.env`:
+   ```bash
+   NETWORK=mainnet
+   LIGHTNING_BACKEND=lnurl
+   BREEZ_API_KEY=<the key from Breez>
+   LNURL_ALLOWED_DOMAINS=["breez.tips"]   # domain of the Lightning addresses Breez gives
+   ```
+2. Restart: `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d`
+   (no rebuild needed: the web server reads the key at runtime).
+3. Check: `curl -s https://$DOMAIN/wallet-config` returns `"enabled":true`.
+4. Each artisan opens **Mon portefeuille** once: the app creates the wallet from their
+   12 words and registers their Lightning address. New requests are paid to it.
+
+The API holds no wallet key: it asks the artisan's Lightning address for each invoice
+and checks the payment with LUD-21. Requests created before the switch have no
+Lightning address: create new ones. Test with a few sats first (docs/adr/0005).
 
 ## Notes
 
