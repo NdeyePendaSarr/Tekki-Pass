@@ -32,6 +32,10 @@ services:
     restart: unless-stopped
     environment:
       API_URL: http://api:8000
+      # Artisan wallet (Breez SDK - Spark, in the browser). Read at runtime: setting the
+      # key and restarting turns the wallet on. Empty: the wallet screen says "soon".
+      BREEZ_API_KEY: ${BREEZ_API_KEY:-}
+      NETWORK: ${NETWORK:-testnet}
     depends_on:
       api:
         condition: service_healthy
@@ -47,9 +51,10 @@ services:
       NOSTR_ISSUER_NSEC: ${NOSTR_ISSUER_NSEC:?set NOSTR_ISSUER_NSEC}
       CLIENT_PHONE_PEPPER: ${CLIENT_PHONE_PEPPER:?set CLIENT_PHONE_PEPPER}
       DEV_GENERATE_MISSING_SECRETS: "false"
-      # Until the Breez API key arrives (docs/adr/0005), payments are simulated. The fake
-      # backend may only publish to a relay on our own network: the one below.
+      # fake: simulated payments, testnet only. lnurl: real payments to each artisan's
+      # Lightning address, checked with LUD-21 (docs/adr/0005); needs NETWORK=mainnet.
       LIGHTNING_BACKEND: ${LIGHTNING_BACKEND:-fake}
+      LNURL_ALLOWED_DOMAINS: ${LNURL_ALLOWED_DOMAINS:-[]}
       NOSTR_RELAYS: '["ws://relay:8080"]'
       NOSTR_MIN_RELAY_ACKS: 1
       # What browsers use to read attestations (verification page).
