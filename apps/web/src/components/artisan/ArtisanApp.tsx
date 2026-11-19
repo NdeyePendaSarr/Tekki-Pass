@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { type Identity, identityFromPhrase } from "@/lib/identity";
+import { type Identity, identityFromPhrase, normalizePhrase } from "@/lib/identity";
 import { savedPubkey } from "@/lib/vault";
 import { Dashboard } from "./Dashboard";
 import { Onboarding } from "./Onboarding";
@@ -21,10 +21,20 @@ export function ArtisanApp() {
     () => savedPubkey() !== null,
     () => null,
   );
-  const [identity, setIdentity] = useState<Identity | null>(null);
-  const open = (phrase: string) => setIdentity(identityFromPhrase(phrase));
+  // The phrase also seeds the Lightning wallet: kept in memory only while unlocked.
+  const [session, setSession] = useState<{ identity: Identity; phrase: string } | null>(null);
+  const open = (phrase: string) =>
+    setSession({ identity: identityFromPhrase(phrase), phrase: normalizePhrase(phrase) });
 
-  if (identity) return <Dashboard identity={identity} onLock={() => setIdentity(null)} />;
+  if (session) {
+    return (
+      <Dashboard
+        identity={session.identity}
+        phrase={session.phrase}
+        onLock={() => setSession(null)}
+      />
+    );
+  }
   if (hasProfile === null) return <p>Chargement…</p>;
   return hasProfile ? <Unlock onUnlocked={open} /> : <Onboarding onDone={open} />;
 }

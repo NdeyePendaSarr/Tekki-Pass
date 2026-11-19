@@ -89,10 +89,20 @@ async function call<T>(path: string, init?: CallOptions): Promise<T> {
 
 export const api = {
   /** Signed with the artisan key (NIP-98): the API refuses unsigned or foreign requests. */
-  createRequest: (artisanPubkey: string, title: string, secretKey: Uint8Array) =>
+  /** `lightningAddress`: the artisan's wallet, which the client's payment goes to. */
+  createRequest: (
+    artisanPubkey: string,
+    title: string,
+    secretKey: Uint8Array,
+    lightningAddress?: string | null,
+  ) =>
     call<AttestationRequest>("/attestation-requests", {
       method: "POST",
-      body: { artisan_pubkey: artisanPubkey, title },
+      body: {
+        artisan_pubkey: artisanPubkey,
+        title,
+        ...(lightningAddress ? { lightning_address: lightningAddress } : {}),
+      },
       signWith: secretKey,
     }),
   /** The artisan's own requests, newest first. Always signed: it contains the client links. */
