@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
         ],
       },
+      {
+        // The browser must always check for a new service worker (public/sw.js).
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, max-age=0" }],
+      },
     ];
   },
 };

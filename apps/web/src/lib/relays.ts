@@ -3,7 +3,7 @@
  * trust the Tekki-Pass API: "les preuves survivent à Tekki-Pass". The API list is
  * only a fallback (relays unreachable, slow 3G).
  */
-import type { Event } from "nostr-tools";
+import type { Event } from "nostr-tools/pure";
 import { SimplePool } from "nostr-tools/pool";
 import type { PublishedAttestation } from "./api";
 import { BADGE_IDENTIFIER } from "./verify";

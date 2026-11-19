@@ -1,10 +1,10 @@
 "use client";
 
-import { nip19 } from "nostr-tools";
+import * as nip19 from "nostr-tools/nip19";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { QrCode } from "@/components/QrCode";
 import { api } from "@/lib/api";
-import { shortNpub } from "@/lib/identity";
+import { shortNpub } from "@/lib/npub";
 import { errorMessage } from "@/lib/messages";
 import { fetchAwardsFromRelays, type FoundAttestation, mergeAttestations } from "@/lib/relays";
 import { type Verification, verifyAttestation } from "@/lib/verify";

@@ -1,5 +1,4 @@
 /** Typed client for the Tekki-Pass API (through the same-origin /api proxy). */
-import { nip98Header } from "./nip98";
 
 export type RequestStatus =
   "awaiting_client" | "awaiting_payment" | "paid" | "published" | "expired";
@@ -56,6 +55,9 @@ async function call<T>(path: string, init?: CallOptions): Promise<T> {
   const body = init?.body === undefined ? undefined : JSON.stringify(init.body);
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (init?.signWith) {
+    // Loaded on demand: only the artisan signs, so client and public pages never
+    // download the signing code.
+    const { nip98Header } = await import("./nip98");
     headers.authorization = nip98Header(
       init.signWith,
       `${window.location.origin}/api${path}`,
@@ -89,20 +91,10 @@ async function call<T>(path: string, init?: CallOptions): Promise<T> {
 
 export const api = {
   /** Signed with the artisan key (NIP-98): the API refuses unsigned or foreign requests. */
-  /** `lightningAddress`: the artisan's wallet, which the client's payment goes to. */
-  createRequest: (
-    artisanPubkey: string,
-    title: string,
-    secretKey: Uint8Array,
-    lightningAddress?: string | null,
-  ) =>
+  createRequest: (artisanPubkey: string, title: string, secretKey: Uint8Array) =>
     call<AttestationRequest>("/attestation-requests", {
       method: "POST",
-      body: {
-        artisan_pubkey: artisanPubkey,
-        title,
-        ...(lightningAddress ? { lightning_address: lightningAddress } : {}),
-      },
+      body: { artisan_pubkey: artisanPubkey, title },
       signWith: secretKey,
     }),
   /** The artisan's own requests, newest first. Always signed: it contains the client links. */
