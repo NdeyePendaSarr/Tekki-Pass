@@ -8,7 +8,7 @@
  */
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { finalizeEvent } from "nostr-tools";
+import { finalizeEvent } from "nostr-tools/pure";
 
 export const HTTP_AUTH_KIND = 27235;
 

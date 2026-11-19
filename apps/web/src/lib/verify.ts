@@ -6,7 +6,7 @@
  */
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { type Event, verifyEvent } from "nostr-tools";
+import { type Event, verifyEvent } from "nostr-tools/pure";
 
 export const BADGE_IDENTIFIER = "tekki-pass-job";
 

@@ -1,5 +1,4 @@
 /** Typed client for the Tekki-Pass API (through the same-origin /api proxy). */
-import { nip98Header } from "./nip98";
 
 export type RequestStatus =
   "awaiting_client" | "awaiting_payment" | "paid" | "published" | "expired";
@@ -56,6 +55,9 @@ async function call<T>(path: string, init?: CallOptions): Promise<T> {
   const body = init?.body === undefined ? undefined : JSON.stringify(init.body);
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (init?.signWith) {
+    // Loaded on demand: only the artisan signs, so client and public pages never
+    // download the signing code.
+    const { nip98Header } = await import("./nip98");
     headers.authorization = nip98Header(
       init.signWith,
       `${window.location.origin}/api${path}`,

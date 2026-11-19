@@ -3,7 +3,8 @@
  * is derived (NIP-06). The same phrase will seed the Lightning wallet (docs/adr/0005),
  * so the artisan has a single thing to back up. Uses nostr-tools: no home-made crypto.
  */
-import { getPublicKey, nip19 } from "nostr-tools";
+import { npubEncode } from "nostr-tools/nip19";
+import { getPublicKey } from "nostr-tools/pure";
 import { generateSeedWords, privateKeyFromSeedWords, validateWords } from "nostr-tools/nip06";
 
 export interface Identity {
@@ -33,7 +34,7 @@ export function normalizePhrase(phrase: string): string {
 export function identityFromPhrase(phrase: string): Identity {
   const secretKey = privateKeyFromSeedWords(normalizePhrase(phrase));
   const pubkey = getPublicKey(secretKey);
-  return { pubkey, npub: nip19.npubEncode(pubkey), secretKey };
+  return { pubkey, npub: npubEncode(pubkey), secretKey };
 }
 
 /** Pick `count` distinct word positions (0-based) for the backup check, in ascending order. */
@@ -47,7 +48,4 @@ export function pickCheckPositions(wordCount: number, count = 3): number[] {
   return [...positions].sort((a, b) => a - b);
 }
 
-/** Short display form, e.g. "npub1abcd…wxyz". */
-export function shortNpub(npub: string): string {
-  return `${npub.slice(0, 10)}…${npub.slice(-4)}`;
-}
+export { shortNpub } from "./npub";
