@@ -23,6 +23,10 @@ const MESSAGES: Record<string, string> = {
     "Paiement reçu. La preuve n'est pas encore publiée : réessaie dans un instant.",
   not_configured: "Le service n'est pas encore prêt. Préviens l'équipe Tekki-Pass.",
   invalid_proof: "La preuve de paiement est invalide. Préviens l'équipe Tekki-Pass.",
+  lightning_address_required:
+    "Ouvre d'abord ton portefeuille (plus bas) pour recevoir les paiements, puis réessaie.",
+  wallet_unavailable:
+    "Le portefeuille de l'artisan ne répond pas pour le moment. Réessaie dans un instant.",
 };
 
 const FALLBACK = "Une erreur est survenue. Réessaie dans un instant.";

@@ -1,30 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useCallback, useState } from "react";
 import { api, type AttestationRequest } from "@/lib/api";
 import { type Identity, shortNpub } from "@/lib/identity";
 import { errorMessage } from "@/lib/messages";
 import { clientLink, whatsappLink } from "@/lib/share";
+import { savedLightningAddress } from "@/lib/wallet";
 import { MyRequests } from "./MyRequests";
+import { Wallet } from "./Wallet";
 
 const MAX_TITLE = 140;
 
 /** Artisan home: describe a finished job, send the link by WhatsApp, follow every request. */
-export function Dashboard({ identity, onLock }: { identity: Identity; onLock: () => void }) {
+export function Dashboard({
+  identity,
+  phrase,
+  onLock,
+}: {
+  identity: Identity;
+  phrase: string;
+  onLock: () => void;
+}) {
   const [title, setTitle] = useState("");
   const [created, setCreated] = useState<AttestationRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Bumped after each creation so the list below reloads.
   const [version, setVersion] = useState(0);
+  // Where the clients' payments go. Remembered on the phone: no need to load the wallet.
+  const [lightningAddress, setLightningAddress] = useState(() =>
+    savedLightningAddress(identity.pubkey),
+  );
+  const onAddress = useCallback((address: string) => setLightningAddress(address), []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      setCreated(await api.createRequest(identity.pubkey, title.trim(), identity.secretKey));
+      setCreated(
+        await api.createRequest(
+          identity.pubkey,
+          title.trim(),
+          identity.secretKey,
+          lightningAddress,
+        ),
+      );
       setTitle("");
       setVersion((v) => v + 1);
     } catch (e) {
@@ -83,6 +105,8 @@ export function Dashboard({ identity, onLock }: { identity: Identity; onLock: ()
       )}
 
       <MyRequests identity={identity} version={version} />
+
+      <Wallet identity={identity} phrase={phrase} onAddress={onAddress} />
 
       <Link className="button secondary" href={`/p/${identity.pubkey}`}>
         Voir ma page publique

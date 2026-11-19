@@ -186,3 +186,22 @@ h2 {
   list-style: none;
   padding: 0;
 }
+
+/* Artisan wallet */
+.balance {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0.25rem 0;
+}
+
+.payments {
+  list-style: none;
+  padding: 0;
+}
+
+.payments li {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
