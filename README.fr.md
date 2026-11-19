@@ -8,22 +8,23 @@
 
 Projet du [Dakar Bitcoin Hack 2026](https://dakar-bitcoin-hack-2026.devpost.com/) (BTrust).
 
-**État (16 nov. 2026) :** tout le parcours de démo fonctionne de bout en bout avec un paiement simulé. Le vrai paiement Lightning (Breez SDK - Spark) est en cours d'intégration.
+**État (18 nov. 2026) :** tout le parcours fonctionne de bout en bout. Les vrais paiements Lightning passent par un wallet self-custodial Breez SDK - Spark dans l'appli de l'artisan ; le wallet et l'adresse Lightning sont testés sur mainnet. La démo locale utilise des paiements simulés : elle tourne sans configuration et sans sats.
 
 ---
 
 ## Parcours pour le jury
 
-> TODO : lien vers la démo en ligne et la vidéo de 3 minutes une fois déployées.
+> **Démo en ligne :** _lien ajouté à la soumission_ · **Vidéo de 3 minutes :** _lien ajouté à la soumission_
 
 Persona de démo (fictif) : **Moussa**, carreleur à Dakar.
 
 | # | Étape | Où (démo locale) | État |
 | --- | --- | --- | --- |
 | 1 | Moussa crée son profil : 12 mots de récupération, vérification de 3 mots, code à 6 chiffres. Sa clé Nostr est dérivée de ces mots (NIP-06). | `/artisan` | ✅ |
+| 1b | Il ouvre **Mon portefeuille** : les mêmes 12 mots créent son wallet Lightning (Breez SDK - Spark, sur son téléphone), qui enregistre son adresse Lightning. Une seule sauvegarde pour tout. | `/artisan` | ✅ |
 | 2 | Il décrit un chantier terminé et envoie le lien à son client par WhatsApp. La demande est signée avec sa clé (NIP-98). | `/artisan` | ✅ |
 | 3 | Le client ouvre le lien, confirme le chantier avec son numéro et voit le QR code de paiement. | `/a/<token>` | ✅ |
-| 4 | Le client paie le micro-frais en Lightning. Les sats arrivent dans le wallet de Moussa. | Wallet Lightning | 🟡 paiement simulé (« Simuler le paiement ») ; wallet Breez en cours |
+| 4 | Le client paie le micro-frais depuis n'importe quel wallet Lightning. Les sats arrivent directement dans le wallet de Moussa, même si son téléphone est éteint. | Wallet Lightning | ✅ sur la démo en ligne (mainnet) ; simulé en local (« Simuler le paiement ») |
 | 5 | Tekki-Pass vérifie la preuve de paiement, signe l'attestation (badge NIP-58) et la publie sur les relais Nostr. | API | ✅ |
 | 6 | Un vérificateur scanne le QR code de Moussa et voit chaque chantier « ✓ Vérifié », contrôlé dans son propre navigateur. | `/p/<pubkey>` | ✅ |
 
@@ -52,11 +53,12 @@ Les sats vont directement dans le wallet de l'artisan, et les attestations sur d
 
 ```mermaid
 flowchart LR
-  A[PWA artisan<br/>wallet self-custodial + clé Nostr] -- chantier + lien, signé NIP-98 --> API[API Tekki-Pass<br/>FastAPI]
+  A[PWA artisan<br/>wallet Breez self-custodial<br/>+ clé Nostr, mêmes 12 mots] -- chantier + lien, signé NIP-98 --> API[API Tekki-Pass<br/>FastAPI]
+  A -- enregistre --> L[Adresse Lightning de l'artisan<br/>serveur LNURL]
   A -- lien WhatsApp --> C[Page client]
-  C -- paie le micro-frais --> A
   C -- confirmation --> API
-  API -- vérifie la preuve de paiement<br/>LNURL-pay + LUD-21 --> A
+  API -- facture : LNURL-pay<br/>vérification : LUD-21 --> L
+  C -- paie le micro-frais<br/>n'importe quel wallet Lightning --> A
   API -- badge NIP-58 signé --> R[(Relais Nostr publics)]
   V[Vérificateur<br/>QR code] -- vérifie dans le navigateur --> R
   API --- DB[(PostgreSQL<br/>demandes uniquement)]
@@ -67,15 +69,24 @@ flowchart LR
 | `apps/web` | PWA Next.js + TypeScript (mobile d'abord, français d'abord, wolof prévu)    |
 | `apps/api` | FastAPI, Python 3.12, entièrement typé. Orchestration seulement : ne détient jamais de fonds |
 | `docs/adr` | Décisions d'architecture (ADR)                                              |
+| `deploy`   | Mise en ligne sur un serveur (Docker Compose + Caddy, HTTPS automatique)    |
 | `.github`  | CI, modèles d'issue et de PR                                                |
 
 Comment fonctionne la confiance :
 
-- **Preuve de paiement :** une facture Lightning payée révèle une preimage dont le SHA-256 est le hash du paiement. L'attestation contient les deux.
+- **Preuve de paiement :** une facture Lightning payée révèle une preimage dont le SHA-256 est le hash du paiement. L'attestation contient les deux. L'API obtient la facture auprès de l'adresse Lightning de l'artisan (LNURL-pay) et la preimage par sa vérification publique LUD-21 : elle ne détient ni clé ni sat, et le téléphone de l'artisan peut être hors ligne.
 - **Preuve de l'émetteur :** l'attestation est un événement Nostr signé par la clé de Tekki-Pass, publié avec la définition de son badge (kind 30009).
 - **Vérifiable par tous :** la page publique lit les attestations directement sur les relais Nostr (notre API ne sert qu'en secours) et revérifie la signature, la clé de l'émetteur et la preuve de paiement dans le navigateur du visiteur, sans faire confiance à notre serveur.
 
 Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestations Nostr NIP-58, micro-frais Lightning, environnements testnet et mainnet, SDK Lightning Breez Spark).
+
+Construit avec :
+
+- **Lightning :** [Breez SDK - Spark](https://sdk-doc-spark.breez.technology/) dans la PWA (WASM, chargé seulement sur l'écran du portefeuille) ; LNURL-pay et LUD-21 côté API.
+- **Nostr :** [nostr-tools](https://github.com/nbd-wtf/nostr-tools) dans le navigateur, [rust-nostr](https://github.com/rust-nostr/nostr) (`nostr-sdk`) dans l'API ; NIP-06, NIP-58, NIP-98.
+- **Appli :** PWA Next.js avec service worker (3G et hors ligne, voir [apps/web/README.md](apps/web/README.md)), FastAPI, PostgreSQL.
+
+Mise en ligne sur un serveur : [deploy/README.md](deploy/README.md).
 
 ## Contraintes
 
@@ -83,7 +94,7 @@ Décisions clés : voir les [ADR](docs/adr/) (wallet self-custodial, attestation
 - **Souveraineté :** Tekki-Pass ne détient ni l'argent ni les preuves de l'artisan.
 - **Vie privée :** ni nom ni numéro sur Nostr, seulement un hash protégé par une clé secrète (HMAC) du numéro du client. Aucune donnée personnelle dans les logs.
 - **Sécurité :** pas de cryptographie maison, dépendances épinglées, secrets uniquement en variables d'environnement. Voir [SECURITY.md](SECURITY.md).
-- **Réseau :** testnet par défaut. Mainnet seulement pour une démo explicite, en attendant la réponse des organisateurs (ADR 0004).
+- **Réseau :** testnet par défaut. Le Lightning de Breez n'existe que sur mainnet : la démo en ligne utilise donc mainnet avec quelques sats (ADR 0005). Les organisateurs n'ont pas encore dit si mainnet est obligatoire (ADR 0004).
 - **Délai :** soumission le 20 novembre 2026, 20h00 UTC.
 
 Le modèle de menaces complet, avec l'état de chaque protection, figure dans le [README anglais](README.md#threat-model-mvp).
@@ -109,9 +120,9 @@ Ce que nous mesurerons. Les valeurs cibles seront fixées après les entretiens 
 
 ## Questions ouvertes
 
-- TODO : montant du micro-frais (après les entretiens ; 210 sats est une valeur provisoire)
-- TODO : mainnet obligatoire ou testnet accepté (question posée aux organisateurs)
-- TODO : cadre réglementaire BCEAO / UEMOA sur les crypto-actifs
+- **Micro-frais :** 210 sats par attestation pour le MVP, à ajuster après les entretiens terrain (ADR 0003).
+- **Mainnet ou testnet :** question posée aux organisateurs, sans réponse pour l'instant. En attendant : testnet par défaut, mainnet avec quelques sats pour la démo en ligne (ADR 0004, ADR 0005).
+- **Réglementation :** cadre BCEAO / UEMOA sur les crypto-actifs, à étudier avant tout lancement au-delà du pilote.
 
 ## Contribuer et licence
 
