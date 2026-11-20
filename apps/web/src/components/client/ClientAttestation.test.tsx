@@ -52,3 +52,10 @@ describe("ClientAttestation", () => {
     expect(await screen.findByText(/la preuve est publiée/i)).toBeInTheDocument();
   });
 });
+
+describe("invoiceQrValue", () => {
+  it("writes the invoice in upper case, the compact form that scans easily", async () => {
+    const { invoiceQrValue } = await import("./ClientAttestation");
+    expect(invoiceQrValue("lnbc2100n1pabc")).toBe("LIGHTNING:LNBC2100N1PABC");
+  });
+});

@@ -5,8 +5,21 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { QrCode } from "@/components/QrCode";
 import { api, type AttestationRequest } from "@/lib/api";
 import { errorMessage } from "@/lib/messages";
+import { Icon } from "../Icon";
+import { Stepper } from "../Stepper";
 
 const POLL_MS = 3000;
+const STEPS = ["Confirmer", "Payer", "Preuve publiée"] as const;
+const STEP_OF = { awaiting_client: 0, awaiting_payment: 1, paid: 1, published: 3, expired: 1 };
+
+/**
+ * QR content for an invoice: upper case is the standard form for BOLT 11 in QR codes. It
+ * uses the compact alphanumeric mode, so the code is much less dense and scans easily from
+ * a phone screen (version 11 instead of 17 for our invoices).
+ */
+export function invoiceQrValue(bolt11: string): string {
+  return `LIGHTNING:${bolt11.toUpperCase()}`;
+}
 
 /**
  * Client page reached from the artisan's WhatsApp link: confirm the job, pay the
@@ -17,6 +30,16 @@ export function ClientAttestation({ token }: { token: string }) {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function copyInvoice(bolt11: string) {
+    try {
+      await navigator.clipboard.writeText(bolt11);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   useEffect(() => {
     api.getRequest(token).then(setRequest, (e: unknown) => setError(errorMessage(e)));
@@ -76,14 +99,16 @@ export function ClientAttestation({ token }: { token: string }) {
 
   return (
     <section>
-      <p className="muted">Demande de confirmation de chantier</p>
+      <Stepper steps={STEPS} current={STEP_OF[request.status]} />
+      <p className="eyebrow">Demande de confirmation de chantier</p>
       <h1>{request.title}</h1>
 
       {request.status === "awaiting_client" && (
         <form onSubmit={confirm} className="card">
           <p>
             L&apos;artisan te demande de confirmer que ce chantier a bien été fait. La preuve coûte{" "}
-            <strong>{request.amount_sat} sats</strong>.
+            <strong className="amount">{request.amount_sat} sats</strong>, payés directement à
+            l&apos;artisan.
           </p>
           <label className="field">
             Ton numéro de téléphone
@@ -98,7 +123,8 @@ export function ClientAttestation({ token }: { token: string }) {
             />
           </label>
           <p className="muted small">
-            Ton numéro n&apos;est jamais publié : seule une empreinte protégée est gardée.
+            <Icon name="lock" size={18} /> Ton numéro n&apos;est jamais publié : seule une empreinte
+            protégée est gardée.
           </p>
           {error && (
             <p role="alert" className="error">
@@ -115,13 +141,26 @@ export function ClientAttestation({ token }: { token: string }) {
         <div className="card">
           <h2>Paiement de la preuve</h2>
           <p>
-            Scanne ce code avec ton application de paiement Bitcoin ({request.amount_sat} sats).
+            Montant : <strong className="amount">{request.amount_sat} sats</strong>
           </p>
-          <QrCode value={`lightning:${request.bolt11}`} label="Code de paiement" />
           <a className="button" href={`lightning:${request.bolt11}`}>
-            Ouvrir mon application de paiement
+            <Icon name="bolt" /> Ouvrir mon application de paiement
           </a>
-          <p className="muted small">En attente du paiement…</p>
+          <p className="muted small center">
+            Ou scanne ce code depuis ton application Bitcoin Lightning (l&apos;appareil photo seul
+            ne suffit pas).
+          </p>
+          <QrCode value={invoiceQrValue(request.bolt11)} label="Code de paiement" />
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => void copyInvoice(request.bolt11 ?? "")}
+          >
+            <Icon name="copy" /> {copied ? "Facture copiée ✓" : "Copier la facture"}
+          </button>
+          <p className="waiting-line" role="status">
+            <span className="spinner" aria-hidden="true" /> En attente du paiement…
+          </p>
           {request.bolt11.startsWith("lnfake") && (
             <button className="button secondary" onClick={simulate} disabled={busy}>
               Simuler le paiement (démo)
@@ -138,7 +177,9 @@ export function ClientAttestation({ token }: { token: string }) {
       {request.status === "paid" && (
         <div className="card">
           <h2>Paiement reçu</h2>
-          <p>Publication de la preuve en cours…</p>
+          <p className="waiting-line" role="status">
+            <span className="spinner" aria-hidden="true" /> Publication de la preuve en cours…
+          </p>
           {error && (
             <p role="alert" className="error">
               {error}
@@ -148,7 +189,10 @@ export function ClientAttestation({ token }: { token: string }) {
       )}
 
       {request.status === "published" && (
-        <div className="card success">
+        <div className="card success center">
+          <span className="success-mark">
+            <Icon name="check" size={30} />
+          </span>
           <h2>Merci, la preuve est publiée ✓</h2>
           <p>
             Ce chantier fait maintenant partie de l&apos;historique vérifiable de l&apos;artisan.

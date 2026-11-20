@@ -8,6 +8,10 @@ import {
   pickCheckPositions,
 } from "@/lib/identity";
 import { isValidPin, saveVault } from "@/lib/vault";
+import { Icon } from "../Icon";
+import { Stepper } from "../Stepper";
+
+const STEPS = ["Préparer", "Écrire", "Vérifier", "Protéger"] as const;
 
 type Step = "intro" | "words" | "check" | "pin";
 
@@ -51,11 +55,19 @@ export function Onboarding({ onDone }: { onDone: (phrase: string) => void }) {
   if (step === "intro") {
     return (
       <section>
+        <Stepper steps={STEPS} current={0} />
         <h1>Créer mon profil</h1>
-        <p>
-          Tu vas recevoir <strong>12 mots secrets</strong>. Ils sont la clé de ton profil et de tes
-          preuves. Prépare une feuille et un stylo.
+        <p className="lead">
+          Tu vas recevoir <strong>12 mots secrets</strong>. Ils sont la clé de ton profil, de tes
+          preuves et de ton portefeuille.
         </p>
+        <div className="callout">
+          <Icon name="key" />
+          <p>
+            Prépare une <strong>feuille et un stylo</strong>. Si tu perds ton téléphone, ces 12 mots
+            sont le seul moyen de tout récupérer.
+          </p>
+        </div>
         <button className="button" onClick={() => setStep("words")}>
           Je suis prêt
         </button>
@@ -66,6 +78,7 @@ export function Onboarding({ onDone }: { onDone: (phrase: string) => void }) {
   if (step === "words") {
     return (
       <section>
+        <Stepper steps={STEPS} current={1} />
         <h1>Écris ces 12 mots</h1>
         <p>Dans l&apos;ordre, sur papier. Ne les envoie à personne, même pas à Tekki-Pass.</p>
         <ol className="words">
@@ -83,7 +96,9 @@ export function Onboarding({ onDone }: { onDone: (phrase: string) => void }) {
   if (step === "check") {
     return (
       <form onSubmit={submitCheck}>
+        <Stepper steps={STEPS} current={2} />
         <h1>Vérifions ta feuille</h1>
+        <p className="muted">Recopie ces 3 mots depuis ta feuille.</p>
         {positions.map((position, i) => (
           <label key={position} className="field">
             Mot n°{position + 1}
@@ -115,11 +130,13 @@ export function Onboarding({ onDone }: { onDone: (phrase: string) => void }) {
 
   return (
     <form onSubmit={submitPin}>
+      <Stepper steps={STEPS} current={3} />
       <h1>Choisis un code à 6 chiffres</h1>
-      <p>Il protège ton profil sur ce téléphone.</p>
+      <p>Il protège ton profil sur ce téléphone. Tu le taperas à chaque ouverture.</p>
       <label className="field">
         Code
         <input
+          className="pin"
           inputMode="numeric"
           type="password"
           maxLength={6}
@@ -131,6 +148,7 @@ export function Onboarding({ onDone }: { onDone: (phrase: string) => void }) {
       <label className="field">
         Répète le code
         <input
+          className="pin"
           inputMode="numeric"
           type="password"
           maxLength={6}

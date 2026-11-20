@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState } from "react";
 import { unlockVault, WrongPinError } from "@/lib/vault";
+import { Icon } from "../Icon";
 
 /** Unlock the saved profile with the 6-digit PIN. */
 export function Unlock({ onUnlocked }: { onUnlocked: (phrase: string) => void }) {
@@ -23,11 +24,18 @@ export function Unlock({ onUnlocked }: { onUnlocked: (phrase: string) => void })
   }
 
   return (
-    <form onSubmit={submit}>
-      <h1>Mon profil</h1>
+    <form onSubmit={submit} className="card">
+      <div className="center">
+        <span className="avatar avatar-center">
+          <Icon name="lock" size={28} />
+        </span>
+      </div>
+      <h1 className="center">Mon profil</h1>
+      <p className="muted center">Ton profil est protégé sur ce téléphone.</p>
       <label className="field">
         Ton code à 6 chiffres
         <input
+          className="pin"
           inputMode="numeric"
           type="password"
           maxLength={6}
