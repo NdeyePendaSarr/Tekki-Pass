@@ -8,6 +8,7 @@ import { shortNpub } from "@/lib/npub";
 import { errorMessage } from "@/lib/messages";
 import { fetchAwardsFromRelays, type FoundAttestation, mergeAttestations } from "@/lib/relays";
 import { type Verification, verifyAttestation } from "@/lib/verify";
+import { Icon } from "../Icon";
 
 const noSubscription = () => () => {};
 
@@ -82,14 +83,23 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
 
   return (
     <section>
-      <p className="muted">Historique vérifiable</p>
-      <h1>Artisan {shortNpub(npub)}</h1>
-      {rows && (
-        <p className="big">
-          <strong>{verified}</strong> chantier{verified > 1 ? "s" : ""} attesté
-          {verified > 1 ? "s" : ""} et payé{verified > 1 ? "s" : ""}
-        </p>
-      )}
+      <div className="card">
+        <div className="profile-head">
+          <span className="avatar">
+            <Icon name="user" size={30} />
+          </span>
+          <div>
+            <p className="eyebrow">Historique vérifiable</p>
+            <h1>Artisan {shortNpub(npub)}</h1>
+          </div>
+        </div>
+        {rows && (
+          <p className="stat big">
+            <strong>{verified}</strong> chantier{verified > 1 ? "s" : ""} attesté
+            {verified > 1 ? "s" : ""} et payé{verified > 1 ? "s" : ""}
+          </p>
+        )}
+      </div>
       {origin === "relays" && (
         <p className="ok small">
           ✓ Preuves lues directement sur le réseau Nostr, sans passer par nous.
@@ -113,16 +123,25 @@ export function PublicProfile({ pubkey }: { pubkey: string }) {
       <ul className="attestations">
         {rows?.map(({ found, verification }) => (
           <li key={found.eventId} className="card">
-            <h2>{verification.ok ? verification.title : "Chantier"}</h2>
-            {verification.ok ? (
-              <p className="ok">
-                ✓ Vérifié : confirmé par le client et payé le{" "}
-                {verification.issuedAt.toLocaleDateString("fr-FR")}
-                {verification.network === "testnet" && " (réseau de test)"}
-              </p>
-            ) : (
-              <p className="error">✗ Non vérifié : {verification.reason}</p>
-            )}
+            <div className="attestation-head">
+              {verification.ok ? (
+                <span className="success-mark small-mark">
+                  <Icon name="check" />
+                </span>
+              ) : null}
+              <div>
+                <h2>{verification.ok ? verification.title : "Chantier"}</h2>
+                {verification.ok ? (
+                  <p className="ok">
+                    ✓ Vérifié : confirmé par le client et payé le{" "}
+                    {verification.issuedAt.toLocaleDateString("fr-FR")}
+                    {verification.network === "testnet" && " (réseau de test)"}
+                  </p>
+                ) : (
+                  <p className="error">✗ Non vérifié : {verification.reason}</p>
+                )}
+              </div>
+            </div>
             <details>
               <summary>Détails techniques</summary>
               <p className="mono">Événement Nostr : {found.eventId}</p>

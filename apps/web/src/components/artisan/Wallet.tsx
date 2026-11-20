@@ -11,6 +11,7 @@ import {
   type WalletSummary,
   walletSummary,
 } from "@/lib/wallet";
+import { Icon } from "../Icon";
 
 type State =
   | { step: "loading" }
@@ -83,7 +84,9 @@ export function Wallet({
   if (state.step === "disabled") {
     return (
       <div className="card">
-        <h2>Mon portefeuille</h2>
+        <h2>
+          <Icon name="wallet" /> Mon portefeuille
+        </h2>
         <p className="muted">
           Le portefeuille Lightning arrive bientôt. Pour l&apos;instant, les paiements de
           démonstration sont simulés.
@@ -95,8 +98,10 @@ export function Wallet({
   if (state.step === "open") {
     const { summary } = state;
     return (
-      <div className="card">
-        <h2>Mon portefeuille</h2>
+      <div className="card feature">
+        <h2>
+          <Icon name="bolt" /> Mon portefeuille
+        </h2>
         <p className="balance">{formatSats(summary.balanceSats)}</p>
         <p className="muted">
           Les paiements de tes clients arrivent ici, même si ton téléphone est éteint.
@@ -124,7 +129,10 @@ export function Wallet({
   const busy = state.step === "opening";
   return (
     <div className="card">
-      <h2>Mon portefeuille</h2>
+      <h2>
+        <Icon name="wallet" /> Mon portefeuille
+      </h2>
+      {!address && <p className="chip waiting">À faire en premier</p>}
       {address ? (
         <p>
           Mon adresse : <span className="link-box">{address}</span>
@@ -134,7 +142,7 @@ export function Wallet({
       )}
       <p className="muted">
         Il est protégé par tes 12 mots : personne d&apos;autre n&apos;y a accès. La première
-        ouverture télécharge environ 4 Mo.
+        ouverture télécharge environ 4 Mo, une seule fois.
       </p>
       {state.step === "error" && (
         <p role="alert" className="error">

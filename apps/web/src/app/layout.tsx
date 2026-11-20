@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandMark } from "@/components/Icon";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
@@ -20,7 +22,19 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="fr">
       <body>
+        <header className="topbar">
+          <div className="topbar-inner">
+            <Link className="brand" href="/" aria-label="Tekki-Pass, accueil">
+              <BrandMark />
+              <span>Tekki-Pass</span>
+            </Link>
+            <span className="topbar-tag">Preuves de travail</span>
+          </div>
+        </header>
         {children}
+        <footer className="footer">
+          Paiements Bitcoin Lightning · Preuves publiées sur Nostr · Ton argent reste à toi
+        </footer>
         <ServiceWorkerRegistration />
       </body>
     </html>

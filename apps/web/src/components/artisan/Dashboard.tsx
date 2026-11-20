@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useCallback, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { api, type AttestationRequest } from "@/lib/api";
 import { type Identity, shortNpub } from "@/lib/identity";
 import { errorMessage } from "@/lib/messages";
 import { clientLink, whatsappLink } from "@/lib/share";
-import { savedLightningAddress } from "@/lib/wallet";
+import { fetchWalletConfig, savedLightningAddress } from "@/lib/wallet";
+import { Icon } from "../Icon";
 import { MyRequests } from "./MyRequests";
 import { Wallet } from "./Wallet";
 
@@ -33,6 +34,17 @@ export function Dashboard({
     savedLightningAddress(identity.pubkey),
   );
   const onAddress = useCallback((address: string) => setLightningAddress(address), []);
+  // Real payments on (Breez key set): the wallet must be opened once before the first request.
+  const [walletEnabled, setWalletEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetchWalletConfig()
+      .then((config) => active && setWalletEnabled(config.enabled))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -57,15 +69,27 @@ export function Dashboard({
   }
 
   const link = created ? clientLink(window.location.origin, created.token) : "";
+  // Real payments go to the artisan's Lightning address: until the wallet has been opened
+  // once, opening it is the first thing to do, so it comes first.
+  const wallet = <Wallet identity={identity} phrase={phrase} onAddress={onAddress} />;
+  const walletFirst = walletEnabled && !lightningAddress;
 
   return (
     <section>
+      <p className="eyebrow">Mon espace artisan</p>
       <h1>Mes chantiers</h1>
-      <p className="muted">Profil {shortNpub(identity.npub)}</p>
+      <p className="chip">
+        <Icon name="user" size={18} />
+        Profil {shortNpub(identity.npub)}
+      </p>
+
+      {walletFirst && wallet}
 
       {created ? (
-        <div className="card">
-          <h2>Lien prêt</h2>
+        <div className="card success">
+          <h2>
+            <Icon name="check" /> Lien prêt
+          </h2>
           <p>Envoie ce lien à ton client. Il confirmera le chantier et paiera la preuve.</p>
           <a
             className="button whatsapp"
@@ -83,6 +107,7 @@ export function Dashboard({
       ) : (
         <form onSubmit={submit} className="card">
           <h2>Nouveau chantier terminé</h2>
+          <p className="muted">Ton client recevra un lien pour confirmer et payer la preuve.</p>
           <label className="field">
             Qu&apos;as-tu fait ?
             <input
@@ -106,10 +131,10 @@ export function Dashboard({
 
       <MyRequests identity={identity} version={version} />
 
-      <Wallet identity={identity} phrase={phrase} onAddress={onAddress} />
+      {!walletFirst && wallet}
 
       <Link className="button secondary" href={`/p/${identity.pubkey}`}>
-        Voir ma page publique
+        <Icon name="qr" /> Voir ma page publique
       </Link>
       <button className="link" onClick={onLock}>
         Verrouiller

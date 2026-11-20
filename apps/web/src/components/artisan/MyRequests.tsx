@@ -7,12 +7,23 @@ import { errorMessage } from "@/lib/messages";
 import { clientLink, whatsappLink } from "@/lib/share";
 
 /** Plain-French status, and whether the client still has something to do. */
-const STATUS: Record<RequestStatus, { label: string; waitingForClient: boolean }> = {
-  awaiting_client: { label: "En attente de confirmation du client", waitingForClient: true },
-  awaiting_payment: { label: "Confirmé, en attente du paiement", waitingForClient: true },
-  paid: { label: "Payé, publication de la preuve en cours", waitingForClient: false },
-  published: { label: "✓ Preuve publiée", waitingForClient: false },
-  expired: { label: "Délai dépassé : crée un nouveau lien", waitingForClient: false },
+const STATUS: Record<
+  RequestStatus,
+  { label: string; waitingForClient: boolean; tone: "waiting" | "done" | "late" }
+> = {
+  awaiting_client: {
+    label: "En attente de confirmation du client",
+    waitingForClient: true,
+    tone: "waiting",
+  },
+  awaiting_payment: {
+    label: "Confirmé, en attente du paiement",
+    waitingForClient: true,
+    tone: "waiting",
+  },
+  paid: { label: "Payé, publication de la preuve en cours", waitingForClient: false, tone: "done" },
+  published: { label: "✓ Preuve publiée", waitingForClient: false, tone: "done" },
+  expired: { label: "Délai dépassé : crée un nouveau lien", waitingForClient: false, tone: "late" },
 };
 
 /**
@@ -54,7 +65,14 @@ export function MyRequests({ identity, version }: { identity: Identity; version:
 
   return (
     <section aria-labelledby="my-requests-title">
-      <h2 id="my-requests-title">Mes demandes</h2>
+      <div className="section-title">
+        <h2 id="my-requests-title">Mes demandes</h2>
+        {requests && requests.length > 0 && (
+          <span className="muted">
+            {requests.length} chantier{requests.length > 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
       {error && (
         <p role="alert" className="error">
           {error}
@@ -65,12 +83,12 @@ export function MyRequests({ identity, version }: { identity: Identity; version:
 
       <ul className="attestations">
         {requests?.map((request) => {
-          const { label, waitingForClient } = STATUS[request.status];
+          const { label, waitingForClient, tone } = STATUS[request.status];
           const link = clientLink(window.location.origin, request.token);
           return (
             <li key={request.token} className="card">
               <h3>{request.title}</h3>
-              <p className={request.status === "published" ? "ok" : "muted"}>{label}</p>
+              <p className={`chip ${tone}`}>{label}</p>
               {waitingForClient && (
                 <a
                   className="button whatsapp"
