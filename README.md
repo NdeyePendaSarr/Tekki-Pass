@@ -1,6 +1,6 @@
 # Tekki-Pass
 
-> Every job paid over Lightning becomes a proof of work anyone can verify, even without us.
+> Every client-confirmed job becomes a proof of work anyone can verify, even without us. The job is paid as usual (in CFA); only the proof costs a few sats over Lightning.
 
 🇫🇷 [Version française](README.fr.md)
 

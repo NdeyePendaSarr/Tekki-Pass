@@ -1,6 +1,6 @@
 # Tekki-Pass
 
-> Chaque chantier payé en Lightning devient une preuve de travail vérifiable par n'importe qui, même sans nous.
+> Chaque chantier confirmé par le client devient une preuve de travail vérifiable par n'importe qui, même sans nous. Le chantier est payé comme d'habitude (en CFA) ; seule la preuve coûte quelques sats en Lightning.
 
 🇬🇧 [English version](README.md)
 
