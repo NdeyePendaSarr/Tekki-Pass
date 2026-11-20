@@ -14,7 +14,7 @@ Projet du [Dakar Bitcoin Hack 2026](https://dakar-bitcoin-hack-2026.devpost.com/
 
 ## Parcours pour le jury
 
-> **Démo en ligne :** _lien ajouté à la soumission_ · **Vidéo de 3 minutes :** _lien ajouté à la soumission_
+> **Vidéo de 3 minutes :** [youtu.be/QMzI7BDOyt8](https://youtu.be/QMzI7BDOyt8) · **Démo en ligne :** un serveur de test permanent est en cours de mise en place ; en attendant, elle se lance en local en une commande (voir Démarrage rapide).
 
 Persona de démo (fictif) : **Moussa**, carreleur à Dakar.
 

@@ -14,7 +14,7 @@ Built for the [Dakar Bitcoin Hack 2026](https://dakar-bitcoin-hack-2026.devpost.
 
 ## Jury walkthrough
 
-> **Live demo:** _link added at submission_ · **3-minute video:** _link added at submission_
+> **3-minute video:** [youtu.be/QMzI7BDOyt8](https://youtu.be/QMzI7BDOyt8) · **Live demo:** a permanent test server is being set up; until then, run it locally in one command (see Quick start).
 
 Demo persona (fictional): **Moussa**, a tiler in Dakar.
 
