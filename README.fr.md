@@ -8,7 +8,7 @@
 
 Projet du [Dakar Bitcoin Hack 2026](https://dakar-bitcoin-hack-2026.devpost.com/) (BTrust).
 
-**État (18 nov. 2026) :** tout le parcours fonctionne de bout en bout. Les vrais paiements Lightning passent par un wallet self-custodial Breez SDK - Spark dans l'appli de l'artisan ; le wallet et l'adresse Lightning sont testés sur mainnet. La démo locale utilise des paiements simulés : elle tourne sans configuration et sans sats.
+**État (20 nov. 2026) :** tout le parcours fonctionne de bout en bout. La démo en ligne et la démo locale tournent avec des **paiements simulés (testnet)** : n'importe qui peut les essayer sans wallet ni sats. Les vrais paiements Lightning sont prêts et s'activent par un réglage : un wallet self-custodial Breez SDK - Spark dans l'appli de l'artisan, testé sur mainnet jusqu'à une vraie facture de 210 sats obtenue auprès de l'adresse Lightning de l'artisan.
 
 ---
 
@@ -24,7 +24,7 @@ Persona de démo (fictif) : **Moussa**, carreleur à Dakar.
 | 1b | Il ouvre **Mon portefeuille** : les mêmes 12 mots créent son wallet Lightning (Breez SDK - Spark, sur son téléphone), qui enregistre son adresse Lightning. Une seule sauvegarde pour tout. | `/artisan` | ✅ |
 | 2 | Il décrit un chantier terminé et envoie le lien à son client par WhatsApp. La demande est signée avec sa clé (NIP-98). | `/artisan` | ✅ |
 | 3 | Le client ouvre le lien, confirme le chantier avec son numéro et voit le QR code de paiement. | `/a/<token>` | ✅ |
-| 4 | Le client paie le micro-frais depuis n'importe quel wallet Lightning. Les sats arrivent directement dans le wallet de Moussa, même si son téléphone est éteint. | Wallet Lightning | ✅ sur la démo en ligne (mainnet) ; simulé en local (« Simuler le paiement ») |
+| 4 | Le client paie le micro-frais depuis n'importe quel wallet Lightning. Les sats arrivent directement dans le wallet de Moussa, même si son téléphone est éteint. | Wallet Lightning | 🟡 simulé sur les démos (« Simuler le paiement », testnet) ; paiement réel prêt, testé jusqu'à la facture mainnet |
 | 5 | Tekki-Pass vérifie la preuve de paiement, signe l'attestation (badge NIP-58) et la publie sur les relais Nostr. | API | ✅ |
 | 6 | Un vérificateur scanne le QR code de Moussa et voit chaque chantier « ✓ Vérifié », contrôlé dans son propre navigateur. | `/p/<pubkey>` | ✅ |
 
@@ -94,7 +94,7 @@ Mise en ligne sur un serveur : [deploy/README.md](deploy/README.md).
 - **Souveraineté :** Tekki-Pass ne détient ni l'argent ni les preuves de l'artisan.
 - **Vie privée :** ni nom ni numéro sur Nostr, seulement un hash protégé par une clé secrète (HMAC) du numéro du client. Aucune donnée personnelle dans les logs.
 - **Sécurité :** pas de cryptographie maison, dépendances épinglées, secrets uniquement en variables d'environnement. Voir [SECURITY.md](SECURITY.md).
-- **Réseau :** testnet par défaut. Le Lightning de Breez n'existe que sur mainnet : la démo en ligne utilise donc mainnet avec quelques sats (ADR 0005). Les organisateurs n'ont pas encore dit si mainnet est obligatoire (ADR 0004).
+- **Réseau :** testnet avec paiements simulés pour les démos. Le Lightning de Breez n'existe que sur mainnet : les vrais paiements utilisent mainnet avec quelques sats (ADR 0005), activés par `NETWORK=mainnet` et `LIGHTNING_BACKEND=lnurl` (deploy/README.md, étape 6). Les organisateurs n'ont pas encore dit si mainnet est obligatoire (ADR 0004).
 - **Délai :** soumission le 20 novembre 2026, 20h00 UTC.
 
 Le modèle de menaces complet, avec l'état de chaque protection, figure dans le [README anglais](README.md#threat-model-mvp).
@@ -121,7 +121,7 @@ Ce que nous mesurerons. Les valeurs cibles seront fixées après les entretiens 
 ## Questions ouvertes
 
 - **Micro-frais :** 210 sats par attestation pour le MVP, à ajuster après les entretiens terrain (ADR 0003).
-- **Mainnet ou testnet :** question posée aux organisateurs, sans réponse pour l'instant. En attendant : testnet par défaut, mainnet avec quelques sats pour la démo en ligne (ADR 0004, ADR 0005).
+- **Mainnet ou testnet :** question posée aux organisateurs, sans réponse pour l'instant. En attendant : testnet avec paiements simulés pour les démos, mainnet prêt pour les vrais paiements (ADR 0004, ADR 0005).
 - **Réglementation :** cadre BCEAO / UEMOA sur les crypto-actifs, à étudier avant tout lancement au-delà du pilote.
 
 ## Contribuer et licence

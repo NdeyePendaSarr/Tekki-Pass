@@ -8,7 +8,7 @@
 
 Built for the [Dakar Bitcoin Hack 2026](https://dakar-bitcoin-hack-2026.devpost.com/) (BTrust).
 
-**Status (18 Nov 2026):** the whole flow works end to end. Real Lightning payments go through a self-custodial Breez SDK - Spark wallet in the artisan's app; the wallet and the Lightning address are tested on mainnet. The local demo uses simulated payments, so it runs with no setup and no sats.
+**Status (20 Nov 2026):** the whole flow works end to end. The live demo and the local demo run with **simulated payments (testnet)**, so anyone can try them with no wallet and no sats. Real Lightning payments are built and switch on with one setting: a self-custodial Breez SDK - Spark wallet in the artisan's app, tested on mainnet up to a real 210-sat invoice from the artisan's Lightning address.
 
 ---
 
@@ -24,7 +24,7 @@ Demo persona (fictional): **Moussa**, a tiler in Dakar.
 | 1b | He opens **Mon portefeuille**: the same 12 words seed his Lightning wallet (Breez SDK - Spark, on his phone), which registers his Lightning address. One backup for everything. | `/artisan` | ✅ |
 | 2 | He describes a finished job and sends the link to his client over WhatsApp. The request is signed with his key (NIP-98). | `/artisan` | ✅ |
 | 3 | The client opens the link, confirms the job with their phone number and sees the payment QR code. | `/a/<token>` | ✅ |
-| 4 | The client pays the micro-fee from any Lightning wallet. The sats go straight to Moussa's wallet, even if his phone is off. | Lightning wallet | ✅ on the live demo (mainnet); simulated locally ("Simuler le paiement") |
+| 4 | The client pays the micro-fee from any Lightning wallet. The sats go straight to Moussa's wallet, even if his phone is off. | Lightning wallet | 🟡 simulated on the demos ("Simuler le paiement", testnet); real payments ready, tested up to the mainnet invoice |
 | 5 | Tekki-Pass checks the proof of payment, signs the attestation (NIP-58 badge) and publishes it on Nostr relays. | API | ✅ |
 | 6 | A verifier scans Moussa's QR code and sees each job "✓ Vérifié", checked in their own browser. | `/p/<pubkey>` | ✅ |
 
@@ -100,7 +100,7 @@ Deployment on one server: [deploy/README.md](deploy/README.md).
 - **Sovereignty:** Tekki-Pass never holds the artisan's money or proofs.
 - **Privacy:** no names or phone numbers on Nostr, only a keyed hash (HMAC) of the client's number. No personal data in logs.
 - **Security:** no home-made cryptography, pinned dependencies, secrets only in environment variables. See [SECURITY.md](SECURITY.md).
-- **Network:** testnet by default. Breez Lightning only exists on mainnet, so the live demo uses mainnet with a few sats (ADR 0005). The organizers have not answered yet whether mainnet is required (ADR 0004).
+- **Network:** testnet with simulated payments for the demos. Breez Lightning only exists on mainnet: real payments use mainnet with a few sats (ADR 0005), switched on with `NETWORK=mainnet` and `LIGHTNING_BACKEND=lnurl` (deploy/README.md, step 6). The organizers have not answered yet whether mainnet is required (ADR 0004).
 - **Time:** submission is due on 20 November 2026, 20:00 UTC.
 
 ### Threat model (MVP)
@@ -141,7 +141,7 @@ What we will measure. Targets are set after the field interviews: no figure is i
 ## Open questions
 
 - **Micro-fee:** 210 sats per attestation for the MVP, to be adjusted after the field interviews (ADR 0003).
-- **Mainnet or testnet:** asked to the organizers, no answer yet. Until then: testnet by default, mainnet with a few sats for the live demo (ADR 0004, ADR 0005).
+- **Mainnet or testnet:** asked to the organizers, no answer yet. Until then: testnet with simulated payments for the demos, mainnet ready for real payments (ADR 0004, ADR 0005).
 - **Regulation:** BCEAO / UEMOA framework for crypto-assets, to be reviewed before any launch beyond the pilot.
 
 ## Contributing and license
